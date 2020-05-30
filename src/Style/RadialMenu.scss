@@ -1,0 +1,12 @@
+.__menu_radial {
+  position: absolute;
+  transform: translate(-50%, -50%);
+
+  &-select {
+    stroke: #fffb;
+    fill: #fff3;
+    &:hover, &.__menu_radial-active {
+      fill: #fff5;
+    }
+  }
+}
