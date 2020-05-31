@@ -7,11 +7,11 @@ import "./Style/App.scss"
 class App extends React.Component {
   render() {
     let choices = [];
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 10; i++) {
       choices.push({name: `some text ${i}`, fn: () => console.log(i)})
     }
     return <>
-      <RadialMenu choices={choices}/>
+      <RadialMenu choices={choices} active={1}/>
       Hello React!
     </>;
   }

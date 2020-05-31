@@ -4,7 +4,13 @@
 
   &-indicator {
     position: absolute;
-    stroke-width: 5;
+    stroke-width: 7;
+    &-fg {
+      stroke: #fffe;
+    }
+    &-bg {
+      stroke: #fff6;
+    }
   }
 
   &-select {
@@ -12,8 +18,19 @@
     transform: translate(-50%, -50%);
     align-items: center;
     justify-content: center;
-    &.__menu_radial-active {
-      color: #fff5;
-    }
+    color: #fff6;
+    user-select: none;
+    text-align: center;
+    width: 100px;
+  }
+  &-active {
+    background-color: #0091EA;
+    border-radius: 2px;
+    color: #fff;
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+  &-selection:not(&-active) {
+    color: #fffe;
+    transform: translate(-50%, -50%) scale(1.2);
   }
 }
