@@ -11,11 +11,13 @@ interface State {
   menuOpen: boolean
   menuPosition: {x: number, y: number}
   menuSelection: number
+  mouseOffset: [number, number]
 }
 
 const cfg = {
-  ir: 50,
-  or: 100
+  tr: 100,
+  ir: 30,
+  ia: Math.PI/2,
 }
 
 class RadialMenu extends Component<Props, State> {
@@ -23,6 +25,7 @@ class RadialMenu extends Component<Props, State> {
     menuOpen: false,
     menuPosition: {x: -1, y: -1},
     menuSelection: -1,
+    mouseOffset: [0, 0],
   }
 
   componentDidMount() {
@@ -50,29 +53,32 @@ class RadialMenu extends Component<Props, State> {
   mouseMoveListener = (e: MouseEvent) => {
     const {y, x} = this.state.menuPosition;
     const rx = e.x - x, ry = e.y - y;
-    const newV = rx**2 + ry**2 > cfg.ir**2 ?
-      ((Math.atan2(ry, rx) + 5*Math.PI/2) % (Math.PI*2)) / (2*Math.PI) * this.props.choices.length << 0 :
+    const {length} = this.props.choices;
+    const outside = rx**2 + ry**2 > cfg.ir**2;
+    const newV = outside ?
+      ((Math.atan2(ry, rx) + 5*Math.PI/2 + Math.PI/length) % (Math.PI*2)) / (2*Math.PI) * length << 0 :
       -1;
-    if (this.state.menuSelection !== newV)
-      this.setState({menuSelection: newV})
+    this.setState({menuSelection: newV, mouseOffset: outside ? [rx, ry] : [0, 0]});
   }
 
   render() {
     const {choices} = this.props;
-    const {menuOpen, menuPosition, menuSelection} = this.state;
+    const {menuOpen, menuPosition, menuSelection, mouseOffset} = this.state;
     if (!menuOpen) return null;
-    const itemCount = choices.length;
-    const s = {s: {rad: 2*Math.PI/itemCount, deg: 360/itemCount}, o: {x: Math.sin(2*Math.PI/itemCount), y: Math.cos(2*Math.PI/itemCount)}};
-    return <svg viewBox="-200 -200 400 400" width={400} className="__menu_radial" style={{top: menuPosition.y, left: menuPosition.x}}>
-      {choices.map((v, i) => {
-        return <g transform={`rotate(${s.s.deg*i})`} key={i}>
-          <path d={`M0 -${cfg.ir}A${cfg.ir} ${cfg.ir} 0 0 1 ${cfg.ir*s.o.x} ${-cfg.ir*s.o.y}L${cfg.or*s.o.x} ${-cfg.or*s.o.y}A${cfg.or} ${cfg.or} 0 0 0 0 -${cfg.or}`}
-                className={classMap("__menu_radial-select", menuSelection === i && "__menu_radial-active")}/>
-          <text x={(cfg.ir+cfg.or)/2*Math.sin(Math.PI/itemCount)} y={-(cfg.ir+cfg.or)/2*Math.cos(Math.PI/itemCount)}
-                textAnchor="middle" dominantBaseline="middle">{v.name}</text>
+    return <div className="__menu_radial" style={{top: menuPosition.y, left: menuPosition.x}}>
+      <svg viewBox={`${-cfg.ir-5} ${-cfg.ir-5} ${cfg.ir*2+10} ${cfg.ir*2+10}`} width={cfg.ir*2} style={{transform: "translate(-50%, -50%)"}} className="__menu_radial-indicator">
+        <g fill="none" transform={`rotate(${(Math.atan2(mouseOffset[1], mouseOffset[0]) - cfg.ia/2)/Math.PI*180})`}>
+          <path d={`M${cfg.ir} 0A${cfg.ir} ${cfg.ir} 0 1 0 ${-cfg.ir} 0A${cfg.ir} ${cfg.ir} 0 1 0 ${cfg.ir} 0`} stroke="green"/>
+          {mouseOffset.every(v => v === 0) ? undefined :
+            <path d={`M${cfg.ir} 0A${cfg.ir} ${cfg.ir} 0 0 1 ${Math.cos(cfg.ia) * cfg.ir} ${Math.sin(cfg.ia) * cfg.ir}`} stroke="blue"/>
+          }
         </g>
+      </svg>
+      {choices.map((v, i, {length}) => {
+        return <span className={classMap("__menu_radial-select", menuSelection === i && "__menu_radial-active")} key={i}
+                     style={{transform: `translate(-50%, -50%) translate(${Math.sin(2*Math.PI/length*i)*cfg.tr}px, ${-Math.cos(2*Math.PI/length*i)*cfg.tr}px)`}}>{v.name}</span>
       })}
-    </svg>
+    </div>
   }
 }
 

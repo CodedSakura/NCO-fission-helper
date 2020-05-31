@@ -7,8 +7,8 @@ import "./Style/App.scss"
 class App extends React.Component {
   render() {
     let choices = [];
-    for (let i = 0; i < 5; i++) {
-      choices.push({name: `${i}`, fn: () => console.log(i)})
+    for (let i = 0; i < 8; i++) {
+      choices.push({name: `some text ${i}`, fn: () => console.log(i)})
     }
     return <>
       <RadialMenu choices={choices}/>

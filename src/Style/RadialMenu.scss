@@ -1,12 +1,19 @@
 .__menu_radial {
-  position: absolute;
+  position: fixed;
   transform: translate(-50%, -50%);
 
+  &-indicator {
+    position: absolute;
+    stroke-width: 5;
+  }
+
   &-select {
-    stroke: #fffb;
-    fill: #fff3;
-    &:hover, &.__menu_radial-active {
-      fill: #fff5;
+    position: absolute;
+    transform: translate(-50%, -50%);
+    align-items: center;
+    justify-content: center;
+    &.__menu_radial-active {
+      color: #fff5;
     }
   }
 }
