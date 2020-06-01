@@ -3,6 +3,7 @@ import React from 'react';
 import RadialMenu from "./Components/RadialMenu";
 
 import "./Style/App.scss"
+import Grid2D from "./Components/Grid2D";
 
 class App extends React.Component {
   render() {
@@ -13,6 +14,7 @@ class App extends React.Component {
     return <>
       <RadialMenu choices={choices} active={1}/>
       Hello React!
+      <Grid2D data={[[[]]]}/>
     </>;
   }
 }
