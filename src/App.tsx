@@ -2,8 +2,6 @@ import React from 'react';
 
 import RadialMenu from "./Components/RadialMenu";
 
-import "./Style/App.scss"
-
 class App extends React.Component {
   render() {
     let choices = [];
