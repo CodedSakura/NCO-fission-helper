@@ -15,7 +15,7 @@ export const DefaultConfig: Config = {
   entryRadius: 100,
   indicatorRadius: 30,
   indicatorAngle: Math.PI/2,
-  shortTimeout: 150,
+  shortTimeout: 200,
 }
 
 enum MenuState {
@@ -31,7 +31,6 @@ export interface MenuChoice {
 interface RadialMenuProps {
   choices: MenuChoice[]
   config?: Partial<Config>
-  children: JSX.Element
 }
 
 interface RadialMenuState {
@@ -48,27 +47,24 @@ class RadialMenu extends Component<RadialMenuProps, RadialMenuState> {
     mouseAngle: null,
     mouseDist2: -1
   }
-  mouse2down = false;
+  mouseDownTime: number = -1;
   originalEvt: MouseEvent|undefined;
   wrapper: HTMLDivElement|null = null;
 
   componentWillUnmount() {
-    if (this.props.children instanceof Element)
-      this.props.children.removeEventListener("contextmenu", this.menuListener);
+    if (this.wrapper)
+      this.wrapper.removeEventListener("contextmenu", this.menuListener);
   }
 
-  menuListener = (e: Event) => ((e: MouseEvent) => {
+  menuListener = (e: MouseEvent) => {
     e.preventDefault();
     this.originalEvt = e;
-    this.mouse2down = true;
     this.setState({menuState: MenuState.Undecided, menuPosition: [e.pageX, e.pageY]});
     document.addEventListener("mousemove", this.mouseMoveListener);
     document.addEventListener("mouseup", this.mouseUpListener);
     this.mouseMoveListener(e);
-    setTimeout(() => {
-      this.setState({menuState: this.mouse2down ? MenuState.HoldOpen : MenuState.ClickOpen});
-    }, {...DefaultConfig, ...this.props.config}.shortTimeout);
-  })(e as MouseEvent);
+    this.mouseDownTime = Date.now();
+  }
 
   mouseMoveListener = (e: MouseEvent) => {
     const [x, y] = this.state.menuPosition;
@@ -81,26 +77,39 @@ class RadialMenu extends Component<RadialMenuProps, RadialMenuState> {
     this.setState({mouseAngle: angle, mouseDist2: dist2});
   }
 
+  globalMenuListener = () => {
+    this.setState({menuState: MenuState.Closed, mouseAngle: null});
+    document.removeEventListener("contextmenu", this.globalMenuListener);
+    document.removeEventListener("mousemove", this.mouseMoveListener);
+    document.removeEventListener("mouseup", this.mouseUpListener);
+  }
+
   mouseUpListener = (e: MouseEvent) => {
-    if (e.button === 2) {
-      this.mouse2down = false;
-    }
     switch (this.state.menuState) {
       case MenuState.Undecided:
-        return;
-      case MenuState.ClickOpen:
-        // TODO
-        break;
+        if (Date.now() - this.mouseDownTime <= {...DefaultConfig, ...this.props.config}.shortTimeout) {
+          document.addEventListener("contextmenu", this.globalMenuListener);
+          this.setState({menuState: MenuState.ClickOpen});
+          return;
+        }
+        // fallthrough
       case MenuState.HoldOpen:
         if (e.button === 2 && this.state.mouseAngle !== null) {
           let choice = this.props.choices[this.state.mouseAngle / this.props.choices.length << 0];
           if (!choice.disabled) choice.fn();
         }
-        this.setState({menuState: MenuState.Closed, mouseAngle: null});
-        document.removeEventListener("mousemove", this.mouseMoveListener);
-        document.removeEventListener("mouseup", this.mouseUpListener);
+        break;
+      case MenuState.ClickOpen:
+        if (e.button === 0 && this.state.mouseAngle !== null) {
+          let choice = this.props.choices[this.state.mouseAngle / this.props.choices.length << 0];
+          if (!choice.disabled) choice.fn();
+        }
+        document.removeEventListener("contextmenu", this.globalMenuListener);
         break;
     }
+    this.setState({menuState: MenuState.Closed, mouseAngle: null});
+    document.removeEventListener("mousemove", this.mouseMoveListener);
+    document.removeEventListener("mouseup", this.mouseUpListener);
   }
 
   render() {
@@ -110,7 +119,7 @@ class RadialMenu extends Component<RadialMenuProps, RadialMenuState> {
     return <div ref={ref => {
       this.wrapper = ref;
       if (ref) ref.addEventListener("contextmenu", this.menuListener);
-    }}>
+    }} style={{display: "contents"}}>
       {this.props.children}
       {menuState === MenuState.Closed ? null :
         <div className="__menu_radial" style={{top: menuPosition[1], left: menuPosition[0]}}>
