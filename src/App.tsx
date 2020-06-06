@@ -1,22 +1,22 @@
 import React from 'react';
 
-import RadialMenu from "./Components/RadialMenu";
-
 import "./Style/App.scss"
 import Grid2D from "./Components/Grid2D";
+import {Config} from "./Utils/Config";
+// import {dataMap} from "./Utils/dataMap";
+
 
 class App extends React.Component {
   render() {
-    let choices = [];
-    for (let i = 0; i < 10; i++) {
-      choices.push({name: `some text ${i}`, fn: () => console.log(i)})
-    }
     return <>
-      <RadialMenu choices={choices} active={1}/>
       Hello React!
       <Grid2D data={[[[]]]}/>
     </>;
   }
 }
+
+fetch("./nuclearcraft_default.cfg").then(r => r.text()).then(t => console.log(new Config(t)));
+
+// console.log(dataMap["0.0.1"].fission.components.sink.map(v => `${v}:\t${Config.defaultSinkRules[v].map(v => `${v.requireExact ? "exactly" : "at least"} ${v.neededCount} ${v.axial ? "axial " : ""}${v.relatedComp}`).join(", ")}`).join("\n"));
 
 export default App;
