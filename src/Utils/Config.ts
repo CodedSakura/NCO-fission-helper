@@ -1,5 +1,5 @@
 import {Blade, Coil, CoilRule, FissionReactorConfig, Fuel, Moderator, NeutronSource, Reflector, Shield, Sink, SinkRule, Steam, TurbineConfig} from "./types";
-import {dataMap} from "./dataMap";
+import {latestDM} from "./dataMap";
 
 export class Config {
   static defaultSinkRules: {[x: string]: SinkRule[]} = {
@@ -56,11 +56,13 @@ export class Config {
   coils: Coil[] = [];
   steam: Steam[] = [];
 
-  fissionReactor: FissionReactorConfig|undefined;
-  turbine: TurbineConfig|undefined;
+  fissionReactor: FissionReactorConfig;
+  turbine: TurbineConfig;
 
   constructor(text: string, customSinkRules: {[x: string]: SinkRule[]} = Config.defaultSinkRules) {
-    this.populateConfig(this.parseRawConfig(text), customSinkRules);
+    const {fissionReactor, turbine} = this.populateConfig(this.parseRawConfig(text), customSinkRules);
+    this.fissionReactor = fissionReactor;
+    this.turbine = turbine;
   }
 
   private parseRawConfig(text: string) {
@@ -134,25 +136,7 @@ export class Config {
 
   private populateConfig(rawConf: any, sinkRules: {[x: string]: SinkRule[]}) {
     if (!this.isValidOverhaul(rawConf)) throw new Error("Config is not Overhaul!");
-    // @ts-ignore
-    const dm = dataMap[dataMap.latest];
-
-    this.fissionReactor = {
-      fuelTimeMultiplier: rawConf["fission"][dm.configs.fission.fuelTimeMultiplier],
-      coolingEfficiencyLeniency: rawConf["fission"][dm.configs.fission.coolingEfficiencyLeniency],
-      neutronReach: rawConf["fission"][dm.configs.fission.neutronReach],
-      maxSize: rawConf["fission"][dm.configs.fission.maxSize],
-      minSize: rawConf["fission"][dm.configs.fission.minSize],
-      canOverheat: rawConf["fission"][dm.configs.fission.canOverheat],
-      sparsityPenaltyParams: rawConf["fission"][dm.configs.fission.sparsityPenaltyParams],
-    };
-    this.turbine = {
-      minSize: rawConf["turbine"][dm.configs.turbine.minSize],
-      maxSize: rawConf["turbine"][dm.configs.turbine.maxSize],
-      tensionThroughputFactor: rawConf["turbine"][dm.configs.turbine.tensionThroughputFactor],
-      throughputEfficiencyLeniency: rawConf["turbine"][dm.configs.turbine.throughputEfficiencyLeniency],
-      mbPerBlade: rawConf["turbine"][dm.configs.turbine.mbPerBlade],
-    }
+    const dm = latestDM;
 
     dm.fission.components.sink.forEach((v: string, i: number) => {
       this.sinks.push({
@@ -192,6 +176,7 @@ export class Config {
       dm.fuel.fuelTypes[f].forEach((v: string, i: number) => {
         this.fuels.push({
           name: v,
+          type: f,
           burnTime: rawConf["fission"][dm.configs.fission.fuelConfigPatterns.fuelTime.replace("{name}", f)][i],
           criticality: rawConf["fission"][dm.configs.fission.fuelConfigPatterns.criticality.replace("{name}", f)][i],
           efficiency: rawConf["fission"][dm.configs.fission.fuelConfigPatterns.efficiency.replace("{name}", f)][i],
@@ -230,6 +215,24 @@ export class Config {
         expansion: rawConf["turbine"][dm.configs.turbine.expansionLevel][i],
       });
     });
+
+    return {
+      fissionReactor: {
+        fuelTimeMultiplier: rawConf["fission"][dm.configs.fission.fuelTimeMultiplier],
+        coolingEfficiencyLeniency: rawConf["fission"][dm.configs.fission.coolingEfficiencyLeniency],
+        neutronReach: rawConf["fission"][dm.configs.fission.neutronReach],
+        maxSize: rawConf["fission"][dm.configs.fission.maxSize],
+        minSize: rawConf["fission"][dm.configs.fission.minSize],
+        canOverheat: rawConf["fission"][dm.configs.fission.canOverheat],
+        sparsityPenaltyParams: rawConf["fission"][dm.configs.fission.sparsityPenaltyParams],
+      }, turbine: {
+        minSize: rawConf["turbine"][dm.configs.turbine.minSize],
+        maxSize: rawConf["turbine"][dm.configs.turbine.maxSize],
+        tensionThroughputFactor: rawConf["turbine"][dm.configs.turbine.tensionThroughputFactor],
+        throughputEfficiencyLeniency: rawConf["turbine"][dm.configs.turbine.throughputEfficiencyLeniency],
+        mbPerBlade: rawConf["turbine"][dm.configs.turbine.mbPerBlade],
+      }
+    }
   }
 
   isValidOverhaul(rawConf: any): boolean {

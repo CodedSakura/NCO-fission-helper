@@ -1,18 +1,20 @@
 export const dataMap = {
-  latest: "0.0.1",
   "0.0.1": {
+    version: "0.0.1",
     imageType: "png",
     fission: {
-      indicatorBitCount: 3,
-      indicatorOrder: ["sinks", "moderators", "reflectors", "shields", "cell", "wall"],
+      indicatorBitCount: 4,
+      indicatorOrder: ["air", "sink", "moderator", "reflector", "shield", "cell", "irradiator", "wall"],
       components: {
+        air: ["air"],
         sink: ["water", "iron", "redstone", "quartz", "obsidian", "nether_brick", "glowstone", "lapis", "gold", "prismarine", "slime", "end_stone", "purpur", "diamond", "emerald", "copper", "tin", "lead", "boron", "lithium", "magnesium", "manganese", "aluminum", "silver", "fluorite", "villiaumite", "carobbiite", "arsenic", "liquid_nitrogen", "liquid_helium", "enderium", "cryotheum"],
         moderator: ["graphite", "beryllium", "heavy_water"],
         reflector: ["beryllium_carbon", "lead_steel"],
         shield: ["boron_silver"],
-        cell: "cell",
-        wall: "wall",
-      },
+        cell: ["cell"],
+        wall: ["wall"],
+        irradiator: ["irradiator"]
+      } as any,
       neutronSourceOrder: ["ra_be", "po_be", "cf_252"]
     },
     turbine: {
@@ -25,9 +27,9 @@ export const dataMap = {
         indicatorOrder: ["coils", "rotor_bearing", "wall"],
         components: {
           coil: ["magnesium", "beryllium", "aluminum", "gold", "copper", "silver"],
-          rotor_bearing: "rotor_bearing",
-          wall: "wall"
-        }
+          rotor_bearing: ["rotor_bearing"],
+          wall: ["wall"]
+        } as any
       }
     },
     fuel: {
@@ -43,7 +45,7 @@ export const dataMap = {
         curium: ["LECm-243-TRISO", "LECm-243-OX", "LECm-243-NI", "LECm-243-ZA", "LECm-243-F4", "HECm-243-TRISO", "HECm-243-OX", "HECm-243-NI", "HECm-243-ZA", "HECm-243-F4", "LECm-245-TRISO", "LECm-245-OX", "LECm-245-NI", "LECm-245-ZA", "LECm-245-F4", "HECm-245-TRISO", "HECm-245-OX", "HECm-245-NI", "HECm-245-ZA", "HECm-245-F4", "LECm-247-TRISO", "LECm-247-OX", "LECm-247-NI", "LECm-247-ZA", "LECm-247-F4", "HECm-247-TRISO", "HECm-247-OX", "HECm-247-NI", "HECm-247-ZA", "HECm-247-F4"],
         berkelium: ["LEB-248-TRISO", "LEB-248-OX", "LEB-248-NI", "LEB-248-ZA", "LEB-248-F4", "HEB-248-TRISO", "HEB-248-OX", "HEB-248-NI", "HEB-248-ZA", "HEB-248-F4"],
         californium: ["LECf-249-TRISO", "LECf-249-OX", "LECf-249-NI", "LECf-249-ZA", "LECf-249-F4", "HECf-249-TRISO", "HECf-249-OX", "HECf-249-NI", "HECf-249-ZA", "HECf-249-F4", "LECf-251-TRISO", "LECf-251-OX", "LECf-251-NI", "LECf-251-ZA", "LECf-251-F4", "HECf-251-TRISO", "HECf-251-OX", "HECf-251-NI", "HECf-251-ZA", "HECf-251-F4"],
-      }
+      } as any
     },
     configs: {
       fission: {
@@ -88,3 +90,5 @@ export const dataMap = {
     }
   },
 }
+
+export const latestDM = dataMap["0.0.1"];

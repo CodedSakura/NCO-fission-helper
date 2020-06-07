@@ -40,6 +40,7 @@ export interface Reflector {
 }
 export interface Fuel {
   name: string
+  type: string
   efficiency: number
   heat: number
   criticality: number
@@ -50,6 +51,22 @@ export interface Fuel {
 export interface NeutronSource {
   name: string
   efficiency: number
+}
+
+export type Position = [number, number, number];
+export interface FuelCellData {
+  adjacentCells: number
+  adjacentReflectors: number
+  fuel: Fuel
+  pos: Position
+  heatMultiplier: number
+  heatProduction: number
+  positionalEff: number
+  hasCasingConnection: boolean
+  flux: number
+  calculated: boolean
+  primed: boolean
+  checkedModerators: Position[]
 }
 
 interface GenericBlade {
