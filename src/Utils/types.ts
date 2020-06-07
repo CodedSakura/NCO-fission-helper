@@ -115,3 +115,9 @@ export interface TurbineConfig extends Multiblock {
   throughputEfficiencyLeniency: number
   tensionThroughputFactor: number
 }
+
+export interface FissionReactorExport {
+  name?: string
+  data: number[][][]
+  primedCells: {pos: Position, type: string}[]
+}

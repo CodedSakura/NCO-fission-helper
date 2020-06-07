@@ -1,5 +1,5 @@
 import {latestDM} from "../dataMap";
-import {Fuel, FuelCellData, Position} from "../types";
+import {FissionReactorExport, Fuel, FuelCellData, Position} from "../types";
 import {Config} from "../Config";
 
 interface Dimensions {
@@ -214,6 +214,13 @@ export class FissionReactorGrid {
 
     console.log(fuelCells);
     return {valid: true};
+  }
+
+  export(): FissionReactorExport {
+    return {
+      primedCells: this.neutronSources.map(v => ({pos: v.pos, type: v.type})),
+      data: this.grid.map(v => v.map(v => v.map(v => v.id)))
+    }
   }
 }
 
