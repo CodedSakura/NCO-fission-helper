@@ -1,7 +1,9 @@
 import React from 'react';
 
 import "./Style/App.scss"
-import {FissionReactorGrid} from "./Utils/Grids/FissionReactorGrid";
+import {getReactorFromHellrageConfig} from "./Utils/parsers/HellragePlanner";
+import sampleA from "./Utils/parsers/OXHEU-235_5_x_5_x_5 (1).json";
+import sampleB from "./Utils/parsers/OXMOX-241_OXHEP-241_7_x_4_x_6.json";
 import {Config} from "./Utils/Config";
 
 
@@ -16,6 +18,9 @@ class App extends React.Component {
 
 fetch("./nuclearcraft_default.cfg").then(r => r.text()).then(t => {
   const cfg = new Config(t);
+  console.log(getReactorFromHellrageConfig(sampleA, cfg).export());
+  console.log(getReactorFromHellrageConfig(sampleB, cfg));
+/*
   const r1 = new FissionReactorGrid(cfg);
   r1.setSize({width: 4, depth: 4, height: 1});
   r1.setCell([0, 0, 0], cfg.fuels.find(v => v.name === "LECf-249-ZA")!);
@@ -61,6 +66,8 @@ fetch("./nuclearcraft_default.cfg").then(r => r.text()).then(t => {
   r2.setTile([3, 2, 3], "sink", "water");
   console.log(r2);
   console.log(r2.validate());
+  */
 });
+
 
 export default App;
