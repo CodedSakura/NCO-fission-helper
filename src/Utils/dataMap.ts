@@ -1,4 +1,4 @@
-export const dataMap = {
+export const dataMap: {[x: string]: any} = {
   "0.0.1": {
     version: "0.0.1",
     imageType: "png",
@@ -15,7 +15,8 @@ export const dataMap = {
         wall: ["wall"],
         irradiator: ["irradiator"]
       } as any,
-      neutronSourceOrder: ["ra_be", "po_be", "cf_252"]
+      neutronSourceBitCount: 2,
+      neutronSourceOrder: ["none", "ra_be", "po_be", "cf_252"]
     },
     turbine: {
       blade: {
@@ -35,6 +36,7 @@ export const dataMap = {
     fuel: {
       fuelTypeBitCount: 4,
       fuelTypeOrder: ["thorium", "uranium", "neptunium", "plutonium", "mixed", "americium", "curium", "berkelium", "californium"],
+      fuelBitCount: 5,
       fuelTypes: {
         thorium: ["TBU-TRISO", "TBU-OX", "TBU-NI", "TBU-ZA", "TBU-F4"],
         uranium: ["LEU-233-TRISO", "LEU-233-OX", "LEU-233-NI", "LEU-233-ZA", "LEU-233-F4", "HEU-233-TRISO", "HEU-233-OX", "HEU-233-NI", "HEU-233-ZA", "HEU-233-F4", "LEU-235-TRISO", "LEU-235-OX", "LEU-235-NI", "LEU-235-ZA", "LEU-235-F4", "HEU-235-TRISO", "HEU-235-OX", "HEU-235-NI", "HEU-235-ZA", "HEU-235-F4"],

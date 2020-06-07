@@ -1,4 +1,4 @@
-import {latestDM} from "../dataMap";
+import {dataMap, latestDM} from "../dataMap";
 import {FissionReactorExport, Fuel, FuelCellData, Position} from "../types";
 import {Config} from "../Config";
 
@@ -52,7 +52,6 @@ export class FissionReactorGrid {
       id: indicatorOrder.indexOf(type) | (components[type].indexOf(tile) << indicatorBitCount)
     });
   }
-
   setCell(pos: Position, fuel: Fuel) {
     if (this.isOutsideGrid(pos)) throw new Error("coordinates outside grid");
     const {fuelTypes, fuelTypeOrder, fuelTypeBitCount} = latestDM.fuel;
@@ -68,7 +67,6 @@ export class FissionReactorGrid {
     const prevPrime = this.neutronSources.find(v => v.pos.every((p, i) => p === pos[i]));
     return !!prevPrime;
   }
-
   prime(pos: Position, neutronSource: string) {
     if (this.isOutsideGrid(pos)) throw new Error("coordinates outside grid");
     const {neutronSourceOrder} = latestDM.fission;
@@ -90,7 +88,6 @@ export class FissionReactorGrid {
       });
     }
   }
-
   unPrime(pos: Position) {
     if (this.isOutsideGrid(pos)) throw new Error("coordinates outside grid");
     const prevPrime = this.neutronSources.find(v => v.pos.every((p, i) => p === pos[i]));
@@ -217,9 +214,42 @@ export class FissionReactorGrid {
   }
 
   export(): FissionReactorExport {
+    const neutronMap: {[x: string]: number} = {};
+    this.neutronSources.forEach(v => {
+      neutronMap[v.pos.join(",")] = v.id;
+    })
+    const {indicatorOrder, indicatorBitCount} = latestDM.fission;
+    const {fuelTypes, fuelTypeOrder, fuelTypeBitCount, fuelBitCount} = latestDM.fuel;
     return {
-      primedCells: this.neutronSources.map(v => ({pos: v.pos, type: v.type})),
-      data: this.grid.map(v => v.map(v => v.map(v => v.id)))
+      data: this.grid.map((v, y) => v.map((v, z) => v.map((v, x) => {
+        if (v.type === "cell") {
+          const fuel = this.config.fuels.find(f => f.name === v.tile)!;
+          // here lies my chances of writing readable code :'(
+          return indicatorOrder.indexOf("cell") | (
+            (fuelTypeOrder.indexOf(fuel.type) | (
+              (fuelTypes[fuel.type].indexOf(fuel.name) | (
+                (neutronMap[[x,y,z].join(",")]
+                ) << fuelBitCount)
+              ) << fuelTypeBitCount)
+            ) << indicatorBitCount);
+        }
+        return v.id;
+      }))),
+      dataMap: latestDM.version,
+    }
+  }
+
+  static import(data: number[][][], config: Config, dataMapVersion: string, _dataMap?: any) {
+    if (dataMapVersion !== "custom" && !(dataMapVersion in dataMap))
+      throw new Error("unknown dataMap");
+    const dm = _dataMap ? _dataMap : dataMap[dataMapVersion];
+    const r = new FissionReactorGrid(config);
+    for (let y = 0; y < data.length; y++) {
+      for (let z = 0; z < data[y].length; z++) {
+        for (let x = 0; x < data[y][z].length; x++) {
+          //
+        }
+      }
     }
   }
 }
