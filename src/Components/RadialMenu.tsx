@@ -18,15 +18,23 @@ export const DefaultConfig: Config = {
   shortTimeout: 200,
 }
 
+const calcSelection = (angle: number, count: number) => ((angle + Math.PI/count) % (Math.PI*2)) * count / (2 * Math.PI) << 0
+
 enum MenuState {
   Closed, Undecided, ClickOpen, HoldOpen,
 }
 
-export interface MenuChoice {
+interface MenuFunctional {
   name: string
   fn: (e?: MouseEvent) => any
   disabled?: boolean
 }
+interface MenuNested {
+  name: string
+  choices: MenuChoice[]
+}
+
+export type MenuChoice = MenuNested|MenuFunctional;
 
 interface RadialMenuProps {
   choices: MenuChoice[]
@@ -38,6 +46,7 @@ interface RadialMenuState {
   menuPosition: [number, number]
   mouseAngle: number|null
   mouseDist2: number
+  nested: number[]
 }
 
 class RadialMenu extends Component<RadialMenuProps, RadialMenuState> {
@@ -45,7 +54,8 @@ class RadialMenu extends Component<RadialMenuProps, RadialMenuState> {
     menuState: MenuState.Closed,
     menuPosition: [0, 0],
     mouseAngle: null,
-    mouseDist2: -1
+    mouseDist2: -1,
+    nested: []
   }
   mouseDownTime: number = -1;
   originalEvt: MouseEvent|undefined;
@@ -59,7 +69,7 @@ class RadialMenu extends Component<RadialMenuProps, RadialMenuState> {
   menuListener = (e: MouseEvent) => {
     e.preventDefault();
     this.originalEvt = e;
-    this.setState({menuState: MenuState.Undecided, menuPosition: [e.pageX, e.pageY]});
+    this.setState({menuState: MenuState.Undecided, menuPosition: [e.pageX, e.pageY], nested: [], mouseAngle: null});
     document.addEventListener("mousemove", this.mouseMoveListener);
     document.addEventListener("mouseup", this.mouseUpListener);
     this.mouseMoveListener(e);
@@ -78,43 +88,57 @@ class RadialMenu extends Component<RadialMenuProps, RadialMenuState> {
   }
 
   globalMenuListener = () => {
-    this.setState({menuState: MenuState.Closed, mouseAngle: null});
+    this.setState({menuState: MenuState.Closed});
     document.removeEventListener("contextmenu", this.globalMenuListener);
     document.removeEventListener("mousemove", this.mouseMoveListener);
     document.removeEventListener("mouseup", this.mouseUpListener);
   }
 
   mouseUpListener = (e: MouseEvent) => {
-    switch (this.state.menuState) {
+    const {menuState, mouseAngle, nested} = this.state;
+    let {choices, config} = this.props;
+    nested.forEach(v => {
+      if ("choices" in choices[v])
+        choices = (choices[v] as MenuNested).choices;
+    });
+    switch (menuState) {
       case MenuState.Undecided:
-        if (Date.now() - this.mouseDownTime <= {...DefaultConfig, ...this.props.config}.shortTimeout) {
+        if (Date.now() - this.mouseDownTime <= {...DefaultConfig, ...config}.shortTimeout && !mouseAngle) {
           document.addEventListener("contextmenu", this.globalMenuListener);
           this.setState({menuState: MenuState.ClickOpen});
           return;
         }
         // fallthrough
       case MenuState.HoldOpen:
-        if (e.button === 2 && this.state.mouseAngle !== null) {
-          let choice = this.props.choices[this.state.mouseAngle / this.props.choices.length << 0];
-          if (!choice.disabled) choice.fn();
-        }
-        break;
+        if (e.button !== 2) break;
+        // fallthrough
       case MenuState.ClickOpen:
-        if (e.button === 0 && this.state.mouseAngle !== null) {
-          let choice = this.props.choices[this.state.mouseAngle / this.props.choices.length << 0];
-          if (!choice.disabled) choice.fn();
+        if (e.button === 0)
+          document.removeEventListener("contextmenu", this.globalMenuListener);
+        else if (e.button !== 2) break;
+        if (mouseAngle !== null) {
+          const sel = calcSelection(mouseAngle, choices.length)
+          const choice = choices[sel];
+          if ("fn" in choice && !choice.disabled) choice.fn();
+          else {
+            this.setState(s => ({nested: [...s.nested, sel], menuState: MenuState.ClickOpen}));
+            document.addEventListener("contextmenu", this.globalMenuListener);
+            return;
+          }
         }
-        document.removeEventListener("contextmenu", this.globalMenuListener);
-        break;
     }
-    this.setState({menuState: MenuState.Closed, mouseAngle: null});
+    this.setState({menuState: MenuState.Closed});
     document.removeEventListener("mousemove", this.mouseMoveListener);
     document.removeEventListener("mouseup", this.mouseUpListener);
   }
 
   render() {
-    const {choices} = this.props;
-    const {menuPosition, menuState, mouseAngle} = this.state;
+    let {choices} = this.props;
+    const {menuPosition, menuState, mouseAngle, nested} = this.state;
+    nested.forEach(v => {
+      if ("choices" in choices[v])
+        choices = (choices[v] as MenuNested).choices;
+    });
     const {indicatorRadius: ir, entryRadius: tr, indicatorAngle: ia} = {...DefaultConfig, ...this.props.config};
     return <div ref={ref => {
       this.wrapper = ref;
@@ -136,9 +160,10 @@ class RadialMenu extends Component<RadialMenuProps, RadialMenuState> {
           </svg>
           {choices.map((v, i, {length}) => {
             const ox = Math.sin(2 * Math.PI / length * i) * tr, oy = Math.cos(2 * Math.PI / length * i) * tr;
-            const sel = mouseAngle === null ? -1 : (mouseAngle + Math.PI/length) * length / (2 * Math.PI) << 0;
+            const sel = mouseAngle === null ? -1 : calcSelection(mouseAngle, length);
             return <span key={i} style={{top: `${-oy}px`, left: `${ox}px`}}
-                         className={classMap("__menu_radial-select", sel === i && "__menu_radial-selection", v.disabled && "__menu_radial-active")}>{v.name}</span>
+                         className={classMap("__menu_radial-select", sel === i && "__menu_radial-selection",
+                           "disabled" in v && v.disabled && "__menu_radial-active", "choices" in v && "__menu_radial-nested")}>{v.name}</span>
           })}
         </div>
       }

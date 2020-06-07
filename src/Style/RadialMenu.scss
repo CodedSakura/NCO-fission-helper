@@ -21,7 +21,7 @@
     color: #fff6;
     user-select: none;
     text-align: center;
-    width: 100px;
+    white-space: nowrap;
   }
   &-active {
     background-color: #0091EA;
@@ -31,6 +31,13 @@
   }
   &-selection:not(&-active) {
     color: #fffe;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  &-nested {
+    color: #dfd9;
+  }
+  &-nested &-selection {
+    color: #dfde;
     transform: translate(-50%, -50%) scale(1.2);
   }
 }
