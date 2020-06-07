@@ -3,8 +3,8 @@ import React from 'react';
 import "./Style/App.scss"
 import {getReactorFromHellrageConfig} from "./Utils/parsers/HellragePlanner";
 import sampleA from "./Utils/parsers/OXHEU-235_5_x_5_x_5 (1).json";
-import sampleB from "./Utils/parsers/OXMOX-241_OXHEP-241_7_x_4_x_6.json";
 import {Config} from "./Utils/Config";
+import {FissionReactorGrid} from "./Utils/Grids/FissionReactorGrid";
 
 
 class App extends React.Component {
@@ -18,8 +18,8 @@ class App extends React.Component {
 
 fetch("./nuclearcraft_default.cfg").then(r => r.text()).then(t => {
   const cfg = new Config(t);
-  console.log(getReactorFromHellrageConfig(sampleA, cfg).export());
-  console.log(getReactorFromHellrageConfig(sampleB, cfg));
+  console.log(FissionReactorGrid.import(getReactorFromHellrageConfig(sampleA, cfg).export().data, cfg, "0.0.1"));
+  // console.log(getReactorFromHellrageConfig(sampleB, cfg));
 /*
   const r1 = new FissionReactorGrid(cfg);
   r1.setSize({width: 4, depth: 4, height: 1});
