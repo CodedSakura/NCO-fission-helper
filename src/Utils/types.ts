@@ -118,6 +118,6 @@ export interface TurbineConfig extends Multiblock {
 
 export interface FissionReactorExport {
   name?: string
+  dataMap: string
   data: number[][][]
-  primedCells: {pos: Position, type: string}[]
 }
