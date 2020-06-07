@@ -146,13 +146,13 @@ class RadialMenu extends Component<RadialMenuProps, RadialMenuState> {
     }} style={{display: "contents"}}>
       {this.props.children}
       {menuState === MenuState.Closed ? null :
-        <div className="__menu_radial" style={{top: menuPosition[1], left: menuPosition[0]}}>
+        <div className="menu" style={{top: menuPosition[1], left: menuPosition[0]}}>
           <svg viewBox={`${-ir - 5} ${-ir - 5} ${ir * 2 + 10} ${ir * 2 + 10}`} width={ir * 2}
-               style={{transform: "translate(-50%, -50%)"}} className="__menu_radial-indicator">
+               style={{transform: "translate(-50%, -50%)"}} className="menu__indicator">
             <g fill="none">
-              <path d={`M${ir} 0A${ir} ${ir} 0 1 0 ${-ir} 0A${ir} ${ir} 0 1 0 ${ir} 0`} className="__menu_radial-indicator-bg"/>
+              <path d={`M${ir} 0A${ir} ${ir} 0 1 0 ${-ir} 0A${ir} ${ir} 0 1 0 ${ir} 0`} className="menu__indicator--bg"/>
               {mouseAngle !== null ?
-                <path transform={`rotate(${(mouseAngle - ia/2 - Math.PI/2) / Math.PI * 180})`} className="__menu_radial-indicator-fg"
+                <path transform={`rotate(${(mouseAngle - ia/2 - Math.PI/2) / Math.PI * 180})`} className="menu__indicator--fg"
                       d={`M${ir} 0A${ir} ${ir} 0 0 1 ${Math.cos(ia) * ir} ${Math.sin(ia) * ir}`}/> :
                 undefined
               }
@@ -162,8 +162,8 @@ class RadialMenu extends Component<RadialMenuProps, RadialMenuState> {
             const ox = Math.sin(2 * Math.PI / length * i) * tr, oy = Math.cos(2 * Math.PI / length * i) * tr;
             const sel = mouseAngle === null ? -1 : calcSelection(mouseAngle, length);
             return <span key={i} style={{top: `${-oy}px`, left: `${ox}px`}}
-                         className={classMap("__menu_radial-select", sel === i && "__menu_radial-selection",
-                           "disabled" in v && v.disabled && "__menu_radial-active", "choices" in v && "__menu_radial-nested")}>{v.name}</span>
+                         className={classMap("menu__select", sel === i && "menu__select--selection",
+                           "disabled" in v && v.disabled && "menu__select--highlight", "choices" in v && "menu__select--nested")}>{v.name}</span>
           })}
         </div>
       }
