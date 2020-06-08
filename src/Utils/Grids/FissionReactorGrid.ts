@@ -1,5 +1,5 @@
 import {dataMap, latestDM} from "../dataMap";
-import {FissionReactorExport, Fuel, FuelCellData, Position} from "../types";
+import {FissionReactorExport, FuelCellData, Position} from "../types";
 import {Config} from "../Config";
 
 interface Dimensions {
@@ -12,11 +12,11 @@ interface GridTile {
   type: string
   tile: string
   id: number
+  priming: string
 }
 
 export class FissionReactorGrid {
   grid: GridTile[][][] = [];
-  neutronSources: {type: string, pos: Position, id: number}[] = [];
   shieldsClosed: boolean = false;
   config: Config;
   dataMap: any = latestDM;
@@ -39,7 +39,7 @@ export class FissionReactorGrid {
       for (let z = 0; z < depth; z++) {
         this.grid[y].push([]);
         for (let x = 0; x < width; x++) {
-          this.grid[y][z].push({type: "air", tile: "air", id: indicatorOrder.indexOf("air")});
+          this.grid[y][z].push({type: "air", tile: "air", id: indicatorOrder.indexOf("air"), priming: "none"});
         }
       }
     }
@@ -51,53 +51,33 @@ export class FissionReactorGrid {
     if (indicatorOrder.indexOf(type) < 0) throw new Error(`type '${type}' is not valid`);
     if (components[type].indexOf(tile) < 0) throw new Error(`tile '${tile}' in not valid`);
     if (type === "cell") throw new Error("cells should be added using setCell");
-    // FIXME unprime cell
-    this.setGridTile(pos, {
-      tile: tile, type: type,
-      id: indicatorOrder.indexOf(type) | (components[type].indexOf(tile) << indicatorBitCount)
-    });
-  }
-  setCell(pos: Position, fuel: Fuel) {
-    if (this.isOutsideGrid(pos)) throw new Error("coordinates outside grid");
-    const {fuelTypes, fuelTypeOrder, fuelTypeBitCount} = this.dataMap.fuel;
-    const {indicatorOrder, indicatorBitCount} = this.dataMap.fission;
-    // FIXME unprime cell
-    this.setGridTile(pos, {
-      type: "cell", tile: fuel.name,
-      id: indicatorOrder.indexOf("cell") | ((fuelTypeOrder.indexOf(fuel.type) | (fuelTypes[fuel.type].indexOf(fuel.name) << fuelTypeBitCount)) << indicatorBitCount)
-    });
-  }
 
-  isPrimed(pos: Position): boolean {
-    const prevPrime = this.neutronSources.find(v => v.pos.every((p, i) => p === pos[i]));
-    return !!prevPrime;
+    this.setGridTile(pos, {
+      tile: tile, type: type, priming: "none",
+      id: indicatorOrder.indexOf(type) | (components[type].indexOf(tile) << indicatorBitCount),
+    });
   }
-  prime(pos: Position, neutronSource: string) {
+  setCell(pos: Position, fuelName: string, priming: string) {
     if (this.isOutsideGrid(pos)) throw new Error("coordinates outside grid");
-    const {neutronSourceOrder} = this.dataMap.fission;
-    if (neutronSourceOrder.indexOf(neutronSource) < 0) throw new Error(`invalid neutron source ${neutronSource}`);
-    if (this.getGridTile(pos).type !== "cell") throw new Error(`tile @ ${pos} is not cell`);
-    // FIXME check for self priming fuels
-    const prevPrime = this.neutronSources.find(v => v.pos.every((p, i) => p === pos[i]));
-    if (prevPrime) {
-      this.neutronSources[this.neutronSources.indexOf(prevPrime)] = {
-        pos: pos,
-        type: neutronSource,
-        id: neutronSourceOrder.indexOf(neutronSource)
-      };
-    } else {
-      this.neutronSources.push({
-        pos: pos,
-        type: neutronSource,
-        id: neutronSourceOrder.indexOf(neutronSource)
-      });
-    }
-  }
-  unPrime(pos: Position) {
-    if (this.isOutsideGrid(pos)) throw new Error("coordinates outside grid");
-    const prevPrime = this.neutronSources.find(v => v.pos.every((p, i) => p === pos[i]));
-    if (!prevPrime) throw new Error(`cell @ ${pos} not primed`);
-    this.neutronSources.splice(this.neutronSources.indexOf(prevPrime), 1);
+    const {fuelTypes, fuelTypeOrder, fuelTypeBitCount, fuelBitCount} = this.dataMap.fuel;
+    const {indicatorOrder, indicatorBitCount, neutronSourceOrder} = this.dataMap.fission;
+
+    const fuel = this.config.fuels.find(v => v.name === fuelName);
+    if (!fuel) throw new Error(`unknown fuel ${fuelName}`);
+
+    if (priming !== "none" && neutronSourceOrder.indexOf(priming) < 0)
+      throw new Error(`no such priming method '${priming}'`);
+
+    this.setGridTile(pos, {
+      type: "cell", tile: fuelName, priming: priming,
+      id: indicatorOrder.indexOf("cell") | (
+        (fuelTypeOrder.indexOf(fuel.type) | (
+            (fuelTypes[fuel.type].indexOf(fuel.name) | (
+                (neutronSourceOrder.indexOf(priming)
+                ) << fuelBitCount)
+            ) << fuelTypeBitCount)
+        ) << indicatorBitCount)
+    });
   }
 
   toggleShields() {
@@ -127,7 +107,8 @@ export class FissionReactorGrid {
           tile: {
             id: indicatorOrder.indexOf("wall"),
             tile: "wall",
-            type: "wall"
+            type: "wall",
+            priming: "none",
           },
           pos: pos
         };
@@ -186,12 +167,13 @@ export class FissionReactorGrid {
     const fuelCells: FuelCellData[] = [];
     this.grid.forEach((pane, y) => pane.forEach((line, z) => line.forEach((tile, x) => {
       if (tile.type !== "cell") return;
+      const fuel = this.config.fuels.find(v => v.name === tile.tile)!;
       fuelCells.push({
         pos: [x, y, z],
-        fuel: this.config.fuels.find(v => v.name === tile.tile)!,
+        fuel: fuel,
         flux: 0,
         calculated: false,
-        primed: false,
+        primed: tile.priming !== "none" || fuel.selfPriming,
         adjacentCells: 0,
         adjacentReflectors: 0,
         hasCasingConnection: false,
@@ -202,10 +184,6 @@ export class FissionReactorGrid {
       });
     })));
 
-    fuelCells.filter(cell => cell.fuel.selfPriming || this.isPrimed(cell.pos)).forEach(cell => {
-      cell.primed = true;
-      this.analyzeFuelCell(cell, fuelCells)
-    });
     const maxIterCount = fuelCells.reduce((s, v) => s + (v.primed ? 0 : 1), 1);
     for (let i = 0; i < maxIterCount; i++) {
       fuelCells.filter(v => !v.calculated && v.primed).forEach(c => this.analyzeFuelCell(c, fuelCells));
@@ -219,27 +197,8 @@ export class FissionReactorGrid {
   }
 
   export(): FissionReactorExport {
-    const neutronMap: {[x: string]: number} = {};
-    this.neutronSources.forEach(v => {
-      neutronMap[v.pos.join(",")] = v.id;
-    })
-    const {indicatorOrder, indicatorBitCount} = this.dataMap.fission;
-    const {fuelTypes, fuelTypeOrder, fuelTypeBitCount, fuelBitCount} = this.dataMap.fuel;
     return {
-      data: this.grid.map((v, y) => v.map((v, z) => v.map((v, x) => {
-        if (v.type === "cell") {
-          const fuel = this.config.fuels.find(f => f.name === v.tile)!;
-          // here lies my chances of writing readable code :'(
-          return indicatorOrder.indexOf("cell") | (
-            (fuelTypeOrder.indexOf(fuel.type) | (
-              (fuelTypes[fuel.type].indexOf(fuel.name) | (
-                (neutronMap[[x,y,z].join(",")]
-                ) << fuelBitCount)
-              ) << fuelTypeBitCount)
-            ) << indicatorBitCount);
-        }
-        return v.id;
-      }))),
+      data: this.grid.map(v => v.map(v => v.map(v => v.id))),
       dataMap: this.dataMap.version,
     }
   }
@@ -263,14 +222,7 @@ export class FissionReactorGrid {
             const fuelName = dm.fuel.fuelTypes[fuelType][bytes & ((1 << dm.fuel.fuelBitCount) - 1)];
             bytes >>= dm.fuel.fuelBitCount;
             const priming = dm.fission.neutronSourceOrder[bytes];
-            const fuel = config.fuels.find(v => v.name === fuelName);
-            if (!fuel) throw new Error(`unknown fuel '${fuelName}'`)
-            // console.log(fuelName, priming);
-            // console.log(config.fuels.find(v => v.name === fuelName));
-            r.setCell([x, y, z], fuel);
-            if (priming !== "none") {
-              r.prime([x, y, z], priming);
-            }
+            r.setCell([x, y, z], fuelName, priming);
           } else {
             r.setTile([x, y, z], type, dm.fission.components[type][bytes]);
           }

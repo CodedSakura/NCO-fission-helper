@@ -82,22 +82,13 @@ export function getReactorFromHellrageConfig(data: any, config: Config) {
     if (!processed || !processed.groups) throw new Error(`unknown fuel ${v}`);
 
     const fuelName = processed.groups.fueltype.startsWith("M") ? processed.groups.fueltype : `${processed.groups.fueltype}-${processed.groups.subtype}`;
-    const fuel = config.fuels.find(v => v.name === fuelName);
-
-    if (!fuel) throw new Error(`unknown fuel ${fuelName} (${v})`);
 
     const relevantCells = d.Data.FuelCells[v];
+    const source = v.split(";")[2].toLowerCase().replace("-", "_");
 
     relevantCells.forEach(v => {
-      r.setCell([v.X-1, v.Y-1, v.Z-1], fuel);
+      r.setCell([v.X-1, v.Y-1, v.Z-1], fuelName, source);
     });
-
-    if (v.split(";")[1] === "True") {
-      const source = v.split(";")[2].toLowerCase().replace("-", "_");
-      relevantCells.forEach(v => {
-        r.prime([v.X-1, v.Y-1, v.Z-1], source);
-      });
-    }
   });
 
   Object.keys(d.Data.HeatSinks).forEach(v => {
