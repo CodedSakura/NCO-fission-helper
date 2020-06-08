@@ -1,5 +1,5 @@
 import {Blade, Coil, CoilRule, FissionReactorConfig, Fuel, Moderator, NeutronSource, Reflector, Shield, Sink, SinkRule, Steam, TurbineConfig} from "./types";
-import {latestDM} from "./dataMap";
+import {dataMap, latestDM} from "./dataMap";
 
 export class Config {
   static defaultSinkRules: {[x: string]: SinkRule[]} = {
@@ -11,11 +11,11 @@ export class Config {
     "nether_brick": [{axial: false, neededCount: 1, requireExact: false, relatedComp: "obsidian"}],
     "glowstone": [{axial: false, neededCount: 2, requireExact: false, relatedComp: "moderator"}],
     "lapis": [{axial: false, neededCount: 1, requireExact: false, relatedComp: "cell"}, {axial: false, neededCount: 1, requireExact: false, relatedComp: "wall"}],
-    "gold": [{axial: false, neededCount: 2, requireExact: false, relatedComp: "iron"}],
+    "gold": [{axial: false, neededCount: 2, requireExact: true, relatedComp: "iron"}],
     "prismarine": [{axial: false, neededCount: 2, requireExact: false, relatedComp: "water"}],
     "slime": [{axial: false, neededCount: 1, requireExact: true, relatedComp: "water"}, {axial: false, neededCount: 2, requireExact: false, relatedComp: "lead"}],
     "end_stone": [{axial: false, neededCount: 1, requireExact: false, relatedComp: "reflector"}],
-    "purpur": [{axial: false, neededCount: 1, requireExact: true, relatedComp: "iron"}, {axial: false, neededCount: 1, requireExact: false, relatedComp: "end_stone"}],
+    "purpur": [{axial: false, neededCount: 1, requireExact: false, relatedComp: "iron"}, {axial: false, neededCount: 1, requireExact: false, relatedComp: "R"}],
     "diamond": [{axial: false, neededCount: 1, requireExact: false, relatedComp: "gold"}, {axial: false, neededCount: 1, requireExact: false, relatedComp: "cell"}],
     "emerald": [{axial: false, neededCount: 1, requireExact: false, relatedComp: "prismarine"}, {axial: false, neededCount: 1, requireExact: false, relatedComp: "moderator"}],
     "copper": [{axial: false, neededCount: 1, requireExact: false, relatedComp: "water"}],
@@ -32,7 +32,7 @@ export class Config {
     "carobbiite": [{axial: false, neededCount: 1, requireExact: false, relatedComp: "copper"}, {axial: false, neededCount: 1, requireExact: false, relatedComp: "end_stone"}],
     "arsenic": [{axial: true, neededCount: 2, requireExact: false, relatedComp: "reflector"}],
     "liquid_nitrogen": [{axial: false, neededCount: 2, requireExact: false, relatedComp: "copper"}, {axial: false, neededCount: 1, requireExact: false, relatedComp: "purpur"}],
-    "liquid_helium": [{axial: false, neededCount: 2, requireExact: true, relatedComp: "redstone"}, {axial: false, neededCount: 1, requireExact: false, relatedComp: "wall"}],
+    "liquid_helium": [{axial: false, neededCount: 2, requireExact: true, relatedComp: "redstone"}],
     "enderium": [{axial: false, neededCount: 3, requireExact: false, relatedComp: "moderator"}],
     "cryotheum": [{axial: false, neededCount: 3, requireExact: false, relatedComp: "cell"}]
   };
@@ -59,8 +59,11 @@ export class Config {
   fissionReactor: FissionReactorConfig;
   turbine: TurbineConfig;
 
-  constructor(text: string, customSinkRules: {[x: string]: SinkRule[]} = Config.defaultSinkRules) {
-    const {fissionReactor, turbine} = this.populateConfig(this.parseRawConfig(text), customSinkRules);
+  constructor(text: string, dataMapVersion: string, _dataMap?: any, customSinkRules: {[x: string]: SinkRule[]} = Config.defaultSinkRules) {
+    if (dataMapVersion !== "custom" && !(dataMapVersion in dataMap))
+      throw new Error("unknown dataMap");
+    const dm = _dataMap ? _dataMap : dataMap[dataMapVersion];
+    const {fissionReactor, turbine} = this.populateConfig(this.parseRawConfig(text), customSinkRules, dm);
     this.fissionReactor = fissionReactor;
     this.turbine = turbine;
   }
@@ -134,9 +137,8 @@ export class Config {
     return out;
   }
 
-  private populateConfig(rawConf: any, sinkRules: {[x: string]: SinkRule[]}) {
+  private populateConfig(rawConf: any, sinkRules: {[x: string]: SinkRule[]}, dm: any) {
     if (!this.isValidOverhaul(rawConf)) throw new Error("Config is not Overhaul!");
-    const dm = latestDM;
 
     dm.fission.components.sink.forEach((v: string, i: number) => {
       this.sinks.push({

@@ -19,15 +19,20 @@ export class FissionReactorGrid {
   neutronSources: {type: string, pos: Position, id: number}[] = [];
   shieldsClosed: boolean = false;
   config: Config;
+  dataMap: any = latestDM;
 
-  constructor(config: Config) {
+  constructor(config: Config, dataMapVersion?: string, _dataMap?: any) {
     this.config = config;
+    if (!dataMapVersion) return;
+    if (dataMapVersion !== "custom" && !(dataMapVersion in dataMap))
+      throw new Error("unknown dataMap");
+    this.dataMap = _dataMap ? _dataMap : dataMap[dataMapVersion];
   }
 
   setSize({width, depth, height}: Dimensions) {
     if ([width, depth, height].some(v => v < this.config.fissionReactor.minSize || v > this.config.fissionReactor.maxSize))
       throw new Error("reactor too small/large");
-    const {indicatorOrder} = latestDM.fission;
+    const {indicatorOrder} = this.dataMap.fission;
     this.grid = [];
     for (let y = 0; y < height; y++) {
       this.grid.push([]);
@@ -42,7 +47,7 @@ export class FissionReactorGrid {
 
   setTile(pos: Position, type: string, tile: string = type) {
     if (this.isOutsideGrid(pos)) throw new Error("coordinates outside grid");
-    const {indicatorOrder, components, indicatorBitCount} = latestDM.fission;
+    const {indicatorOrder, components, indicatorBitCount} = this.dataMap.fission;
     if (indicatorOrder.indexOf(type) < 0) throw new Error(`type '${type}' is not valid`);
     if (components[type].indexOf(tile) < 0) throw new Error(`tile '${tile}' in not valid`);
     if (type === "cell") throw new Error("cells should be added using setCell");
@@ -54,8 +59,8 @@ export class FissionReactorGrid {
   }
   setCell(pos: Position, fuel: Fuel) {
     if (this.isOutsideGrid(pos)) throw new Error("coordinates outside grid");
-    const {fuelTypes, fuelTypeOrder, fuelTypeBitCount} = latestDM.fuel;
-    const {indicatorOrder, indicatorBitCount} = latestDM.fission;
+    const {fuelTypes, fuelTypeOrder, fuelTypeBitCount} = this.dataMap.fuel;
+    const {indicatorOrder, indicatorBitCount} = this.dataMap.fission;
     // FIXME unprime cell
     this.setGridTile(pos, {
       type: "cell", tile: fuel.name,
@@ -69,7 +74,7 @@ export class FissionReactorGrid {
   }
   prime(pos: Position, neutronSource: string) {
     if (this.isOutsideGrid(pos)) throw new Error("coordinates outside grid");
-    const {neutronSourceOrder} = latestDM.fission;
+    const {neutronSourceOrder} = this.dataMap.fission;
     if (neutronSourceOrder.indexOf(neutronSource) < 0) throw new Error(`invalid neutron source ${neutronSource}`);
     if (this.getGridTile(pos).type !== "cell") throw new Error(`tile @ ${pos} is not cell`);
     // FIXME check for self priming fuels
@@ -115,7 +120,7 @@ export class FissionReactorGrid {
   private getNeighbourCells(pos: Position): {tile: GridTile, pos: Position}[] {
     if (this.isOutsideGrid(pos)) throw new Error("coordinates outside grid");
     const [x,y,z] = pos;
-    const {indicatorOrder} = latestDM.fission;
+    const {indicatorOrder} = this.dataMap.fission;
     return ([[x+1, y, z], [x-1, y, z], [x, y+1, z], [x, y-1, z], [x, y, z+1], [x, y, z-1]] as Position[]).map(pos => {
       if (this.isOutsideGrid(pos)) {
         return {
@@ -218,8 +223,8 @@ export class FissionReactorGrid {
     this.neutronSources.forEach(v => {
       neutronMap[v.pos.join(",")] = v.id;
     })
-    const {indicatorOrder, indicatorBitCount} = latestDM.fission;
-    const {fuelTypes, fuelTypeOrder, fuelTypeBitCount, fuelBitCount} = latestDM.fuel;
+    const {indicatorOrder, indicatorBitCount} = this.dataMap.fission;
+    const {fuelTypes, fuelTypeOrder, fuelTypeBitCount, fuelBitCount} = this.dataMap.fuel;
     return {
       data: this.grid.map((v, y) => v.map((v, z) => v.map((v, x) => {
         if (v.type === "cell") {
@@ -235,7 +240,7 @@ export class FissionReactorGrid {
         }
         return v.id;
       }))),
-      dataMap: latestDM.version,
+      dataMap: this.dataMap.version,
     }
   }
 
@@ -243,15 +248,35 @@ export class FissionReactorGrid {
     if (dataMapVersion !== "custom" && !(dataMapVersion in dataMap))
       throw new Error("unknown dataMap");
     const dm = _dataMap ? _dataMap : dataMap[dataMapVersion];
-    const r = new FissionReactorGrid(config);
+    const r = new FissionReactorGrid(config, dataMapVersion, _dataMap);
+    r.setSize({height: data.length, depth: data[0].length, width: data[0][0].length});
     for (let y = 0; y < data.length; y++) {
       for (let z = 0; z < data[y].length; z++) {
         for (let x = 0; x < data[y][z].length; x++) {
-          //
+          let bytes = data[y][z][x];
+          const type = dm.fission.indicatorOrder[bytes & ((1 << dm.fission.indicatorBitCount) - 1)];
+          bytes >>= dm.fission.indicatorBitCount;
+          if (!type) throw new Error("unknown type")
+          if (type === "cell") {
+            const fuelType = dm.fuel.fuelTypeOrder[bytes & ((1 << dm.fuel.fuelTypeBitCount) - 1)];
+            bytes >>= dm.fuel.fuelTypeBitCount;
+            const fuelName = dm.fuel.fuelTypes[fuelType][bytes & ((1 << dm.fuel.fuelBitCount) - 1)];
+            bytes >>= dm.fuel.fuelBitCount;
+            const priming = dm.fission.neutronSourceOrder[bytes];
+            const fuel = config.fuels.find(v => v.name === fuelName);
+            if (!fuel) throw new Error(`unknown fuel '${fuelName}'`)
+            // console.log(fuelName, priming);
+            // console.log(config.fuels.find(v => v.name === fuelName));
+            r.setCell([x, y, z], fuel);
+            if (priming !== "none") {
+              r.prime([x, y, z], priming);
+            }
+          } else {
+            r.setTile([x, y, z], type, dm.fission.components[type][bytes]);
+          }
         }
       }
     }
+    return r;
   }
 }
-
-console.log(latestDM);

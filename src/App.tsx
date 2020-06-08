@@ -17,7 +17,7 @@ class App extends React.Component {
 }
 
 fetch("./nuclearcraft_default.cfg").then(r => r.text()).then(t => {
-  const cfg = new Config(t);
+  const cfg = new Config(t, "0.0.1");
   console.log(FissionReactorGrid.import(getReactorFromHellrageConfig(sampleA, cfg).export().data, cfg, "0.0.1"));
   // console.log(getReactorFromHellrageConfig(sampleB, cfg));
 /*
