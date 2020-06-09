@@ -1,5 +1,5 @@
 import {dataMap, latestDM} from "../dataMap";
-import {FissionReactorExport, FuelCellData, ModeratorData, Position} from "../types";
+import {FissionReactorExport, FuelCellData, GridProblem, ModeratorData, Position} from "../types";
 import {Config} from "../Config";
 
 interface Dimensions {
@@ -154,6 +154,8 @@ export class FissionReactorGrid {
           case "shield":
             if (this.shieldsClosed) moderatorPath = false;
             break;
+          case "irradiator":
+            break;
           default:
             moderatorPath = false;
         }
@@ -172,7 +174,7 @@ export class FissionReactorGrid {
     cell.calculated = true;
   }
 
-  validate(): {valid: boolean, problems?: string[]} {
+  validate(): {valid: boolean, problems?: GridProblem[]} {
     const fuelCells: FuelCellData[] = [];
     const moderators: ModeratorData[] = [];
     this.grid.forEach((pane, y) => pane.forEach((line, z) => line.forEach((tile, x) => {
@@ -210,10 +212,51 @@ export class FissionReactorGrid {
       if (fuelCells.every(v => v.calculated)) break;
     }
 
+    const gridProblems: GridProblem[] = [];
+
+    this.grid.forEach((v, y) => v.forEach((v, z) => v.forEach((tile, x) => {
+      if (tile.type !== "sink") return;
+      const ruleset = this.config.sinks.find(v => v.name === tile.tile)!.ruleSet;
+      const neighbours = this.getNeighbourCells([x,y,z]);
+      ruleset.forEach(rule => {
+        const offsets: Position[] = [];
+        neighbours.forEach(nCell => {
+          switch (rule.relatedComp) {
+            case "moderator":
+              if (nCell.tile.type !== "moderator") break;
+              if (!moderators.find(v => v.pos.every((p, i) => p === nCell.pos[i]))!.active)
+                break;
+              // fallthrough
+            case "wall":
+            case "cell":
+              if (nCell.tile.type === rule.relatedComp)
+                offsets.push([x, y, z].map((c, i) => nCell.pos[i] - c) as Position);
+              break;
+            default:
+              if (nCell.tile.tile === rule.relatedComp)
+                offsets.push([x, y, z].map((c, i) => nCell.pos[i] - c) as Position);
+          }
+        });
+
+        if (offsets.length < rule.neededCount) {
+          gridProblems.push({pos: [x,y,z], message: `not enough ${rule.relatedComp}s, at least ${rule.neededCount} needed`});
+          return;
+        }
+        if (rule.requireExact && offsets.length !== rule.neededCount) {
+          gridProblems.push({pos: [x,y,z], message: `wrong amount of ${rule.relatedComp}s, exactly ${rule.neededCount} needed`});
+          return;
+        }
+        if (rule.axial) {
+          // offsets.some(a => offsets.map());
+          // TODO
+        }
+      });
+    })));
+
     // TODO: finish validating
 
     console.log(fuelCells, moderators);
-    return {valid: true};
+    return {valid: gridProblems.length === 0, ...{problems: gridProblems.length ? gridProblems : undefined}};
   }
 
   export(): FissionReactorExport {

@@ -117,7 +117,7 @@ export function getReactorFromHellrageConfig(data: any, config: Config) {
   });
 
   Object.keys(d.Data.Irradiators).forEach(v => {
-    d.Data.NeutronShields[v].forEach(v => {
+    d.Data.Irradiators[v].forEach(v => {
       r.setTile([v.X-1, v.Y-1, v.Z-1], "irradiator", "irradiator");
     });
   });

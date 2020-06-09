@@ -2,9 +2,9 @@ import React from 'react';
 
 import "./Style/App.scss"
 import {getReactorFromHellrageConfig} from "./Utils/parsers/HellragePlanner";
-import sampleA from "./Utils/parsers/OXHEU-235_5_x_5_x_5 (1).json";
 import {Config} from "./Utils/Config";
-import {FissionReactorGrid} from "./Utils/Grids/FissionReactorGrid";
+
+import sampleC from "./Utils/parsers/[ZA]HEA-242 4 x 2 x 4.json";
 
 
 class App extends React.Component {
@@ -18,12 +18,14 @@ class App extends React.Component {
 
 fetch("./nuclearcraft_default.cfg").then(r => r.text()).then(t => {
   const cfg = new Config(t, "0.0.1");
+  const r = getReactorFromHellrageConfig(sampleC, cfg);
+  console.log(r.validate());
 /*  const original = getReactorFromHellrageConfig(sampleA, cfg).export().data;
   const imported = FissionReactorGrid.import(original, cfg, "0.0.1").export().data;
   console.log(imported.every((v, y) => v.every((v, z) => v.every((v, x) => v === original[y][z][x]))));
   console.log(imported);
   // console.log(getReactorFromHellrageConfig(sampleB, cfg));*/
-  const r1 = new FissionReactorGrid(cfg);
+/*  const r1 = new FissionReactorGrid(cfg);
   r1.setSize({width: 4, depth: 4, height: 1});
   r1.setCell([0, 0, 0], "LECf-249-ZA", "none");
   r1.setCell([3, 0, 0], "HEN-236-ZA", "none");
@@ -63,7 +65,7 @@ fetch("./nuclearcraft_default.cfg").then(r => r.text()).then(t => {
   r2.setTile([2, 2, 3], "sink", "prismarine");
   r2.setTile([3, 2, 3], "sink", "water");
   console.log(r2);
-  console.log(r2.validate());
+  console.log(r2.validate());*/
 });
 
 

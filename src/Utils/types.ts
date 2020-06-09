@@ -74,6 +74,11 @@ export interface ModeratorData {
   type: string
 }
 
+export interface GridProblem {
+  pos: Position
+  message: string
+}
+
 interface GenericBlade {
   name: string
   stator: boolean
