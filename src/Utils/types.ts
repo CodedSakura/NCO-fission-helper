@@ -68,6 +68,11 @@ export interface FuelCellData {
   primed: boolean
   checkedModerators: Position[]
 }
+export interface ModeratorData {
+  pos: Position
+  active: boolean
+  type: string
+}
 
 interface GenericBlade {
   name: string

@@ -1,5 +1,5 @@
 import {dataMap, latestDM} from "../dataMap";
-import {FissionReactorExport, FuelCellData, Position} from "../types";
+import {FissionReactorExport, FuelCellData, ModeratorData, Position} from "../types";
 import {Config} from "../Config";
 
 interface Dimensions {
@@ -65,7 +65,7 @@ export class FissionReactorGrid {
     const fuel = this.config.fuels.find(v => v.name === fuelName);
     if (!fuel) throw new Error(`unknown fuel ${fuelName}`);
 
-    if (priming !== "none" && neutronSourceOrder.indexOf(priming) < 0)
+    if (neutronSourceOrder.indexOf(priming) < 0)
       throw new Error(`no such priming method '${priming}'`);
 
     this.setGridTile(pos, {
@@ -118,7 +118,7 @@ export class FissionReactorGrid {
     });
   }
 
-  private analyzeFuelCell(cell: FuelCellData, fuelCells: FuelCellData[]) {
+  private analyzeFuelCell(cell: FuelCellData, fuelCells: FuelCellData[], moderators: ModeratorData[]) {
     this.getNeighbourCells(cell.pos).filter(t => t.tile.type === "moderator" || t.tile.type === "shield").forEach(nb => {
       const offset = cell.pos.map((v, i) => nb.pos[i] - v) as Position;
       if (cell.checkedModerators.some(p => p.every((v, i) => v === offset[i])))
@@ -137,6 +137,11 @@ export class FissionReactorGrid {
             const nCell = fuelCells.find(v => v.pos.every((v, i) => v === pos[i]))!;
             nCell.flux += pathFlux;
             nCell.checkedModerators.push(offset.map(v => -v) as Position);
+
+            const mod = moderators.find(({pos}) => pos.every((v, i) => v === nCell.pos[i] - offset[i]));
+            if (!mod) console.info(`moderator (offset: ${offset.map(v => -v)}) for cell @ ${nCell.pos} not found @ ${nCell.pos.map((v, i) => v - offset[i])}`);
+            else mod.active = true;
+
             if (nCell.flux > nCell.fuel.criticality) nCell.primed = true;
             break outer;
           case "moderator":
@@ -157,6 +162,10 @@ export class FissionReactorGrid {
       if (moderatorPath) {
         cell.flux += pathFlux;
         cell.checkedModerators.push(offset);
+
+        const mod = moderators.find(({pos}) => pos.every((v, i) => v === cell.pos[i] + offset[i]));
+        if (!mod) console.info(`moderator (offset: ${offset}) for cell @ ${cell.pos} not found @ ${cell.pos.map((v, i) => v + offset[i])}`);
+        else mod.active = true;
       }
       // console.log(cell);
     });
@@ -165,34 +174,45 @@ export class FissionReactorGrid {
 
   validate(): {valid: boolean, problems?: string[]} {
     const fuelCells: FuelCellData[] = [];
+    const moderators: ModeratorData[] = [];
     this.grid.forEach((pane, y) => pane.forEach((line, z) => line.forEach((tile, x) => {
-      if (tile.type !== "cell") return;
-      const fuel = this.config.fuels.find(v => v.name === tile.tile)!;
-      fuelCells.push({
-        pos: [x, y, z],
-        fuel: fuel,
-        flux: 0,
-        calculated: false,
-        primed: tile.priming !== "none" || fuel.selfPriming,
-        adjacentCells: 0,
-        adjacentReflectors: 0,
-        hasCasingConnection: false,
-        heatMultiplier: 1,
-        heatProduction: 0,
-        positionalEff: 1,
-        checkedModerators: [],
-      });
+      switch (tile.type) {
+        case "cell":
+          const fuel = this.config.fuels.find(v => v.name === tile.tile)!;
+          fuelCells.push({
+            pos: [x, y, z],
+            fuel: fuel,
+            flux: 0,
+            calculated: false,
+            primed: tile.priming !== "none" || fuel.selfPriming,
+            adjacentCells: 0,
+            adjacentReflectors: 0,
+            hasCasingConnection: false,
+            heatMultiplier: 1,
+            heatProduction: 0,
+            positionalEff: 1,
+            checkedModerators: [],
+          });
+          break;
+        case "moderator":
+          moderators.push({
+            active: false,
+            pos: [x, y, z],
+            type: tile.tile
+          });
+          break;
+      }
     })));
 
     const maxIterCount = fuelCells.reduce((s, v) => s + (v.primed ? 0 : 1), 1);
     for (let i = 0; i < maxIterCount; i++) {
-      fuelCells.filter(v => !v.calculated && v.primed).forEach(c => this.analyzeFuelCell(c, fuelCells));
+      fuelCells.filter(v => !v.calculated && v.primed).forEach(c => this.analyzeFuelCell(c, fuelCells, moderators));
       if (fuelCells.every(v => v.calculated)) break;
     }
 
     // TODO: finish validating
 
-    console.log(fuelCells);
+    console.log(fuelCells, moderators);
     return {valid: true};
   }
 
