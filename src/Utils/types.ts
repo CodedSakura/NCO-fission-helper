@@ -54,25 +54,7 @@ export interface NeutronSource {
 }
 
 export type Position = [number, number, number];
-export interface FuelCellData {
-  adjacentCells: number
-  adjacentReflectors: number
-  fuel: Fuel
-  pos: Position
-  heatMultiplier: number
-  heatProduction: number
-  positionalEff: number
-  hasCasingConnection: boolean
-  flux: number
-  calculated: boolean
-  primed: boolean
-  checkedModerators: Position[]
-}
-export interface ModeratorData {
-  pos: Position
-  active: boolean
-  type: string
-}
+
 
 export interface GridProblem {
   pos: Position
