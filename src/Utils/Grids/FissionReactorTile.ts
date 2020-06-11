@@ -5,7 +5,6 @@ import {Config} from "../Config";
 export class FissionReactorTile {
   readonly type: string;
   readonly pos: Position;
-  readonly priming: string;
   readonly tile: undefined | FissionReactorTile.Tile;
 
   readonly config: Config;
@@ -13,7 +12,6 @@ export class FissionReactorTile {
   constructor(pos: Position, cfg: Config, type: string, addition?: string, priming?: string) {
     this.type = type;
     this.pos = pos;
-    this.priming = priming || "none";
 
     this.config = cfg;
 
@@ -24,7 +22,7 @@ export class FissionReactorTile {
         const priming = cfg.neutronSources.find(v => v.name === addition);
         if (!priming) throw new FissionReactorTile.PrimingError(priming);
         this.tile = {
-          priming: fuel.selfPriming ? "self" : priming,
+          priming: fuel.selfPriming ? "self" : priming || "none",
           primed: fuel.selfPriming,
           fuel: fuel,
           cluster: undefined,
