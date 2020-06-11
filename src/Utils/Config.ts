@@ -1,5 +1,5 @@
 import {Blade, Coil, CoilRule, FissionReactorConfig, Fuel, Moderator, NeutronSource, Reflector, Shield, Sink, SinkRule, Steam, TurbineConfig} from "./types";
-import {dataMap, latestDM} from "./dataMap";
+import {dataMap} from "./dataMap";
 
 export class Config {
   static defaultSinkRules: {[x: string]: SinkRule[]} = {

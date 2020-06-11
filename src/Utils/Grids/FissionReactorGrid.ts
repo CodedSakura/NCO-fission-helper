@@ -14,7 +14,7 @@ export class FissionReactorGrid {
   config: Config;
   dataMap: any = latestDM;
 
-  constructor(config: Config, size: Dimensions, dataMapVersion?: string, _dataMap?: any) {
+  constructor(config: Config, size: Dimensions, dataMapVersion: string, _dataMap?: any) {
     this.config = config;
     if (!dataMapVersion) return;
     if (dataMapVersion !== "custom" && !(dataMapVersion in dataMap))
@@ -62,23 +62,22 @@ export class FissionReactorGrid {
 
   shieldsToggle() {
     this.grid.forEach(v => v.forEach(v => v.forEach(v => {
-      if (v.type === "shield") {
-        const shield = v.tile as FissionReactorTile.Shield;
-        shield.open = !shield.open;
+      if (v.tile.type === "shield") {
+        v.tile.open = !v.tile.open;
       }
     })));
   }
   shieldsClose() {
     this.grid.forEach(v => v.forEach(v => v.forEach(v => {
-      if (v.type === "shield") {
-        (v.tile as FissionReactorTile.Shield).open = false;
+      if (v.tile.type === "shield") {
+        v.tile.open = false;
       }
     })));
   }
   shieldsOpen() {
     this.grid.forEach(v => v.forEach(v => v.forEach(v => {
-      if (v.type === "shield") {
-        (v.tile as FissionReactorTile.Shield).open = true;
+      if (v.tile.type === "shield") {
+        v.tile.open = true;
       }
     })));
   }
@@ -96,43 +95,44 @@ export class FissionReactorGrid {
     this.grid[pos[1]][pos[2]][pos[0]] = val;
   }
 
-  private analyzeFuelCell(cell: FissionReactorTile, fuelCells: FissionReactorTile[], moderators: FissionReactorTile[]) {
-    const data = cell.tile as FissionReactorTile.FuelCell;
-    cell.getNeighbours(this.grid).filter(t => t.type === "moderator" || t.type === "shield").forEach(nb => {
-      const offset = cell.pos.map((v, i) => nb.pos[i] - v) as Position;
-      if (data.checkedModerators.some(p => p.every((v, i) => v === offset[i])))
+  private analyzeFuelCell(cell: FissionReactorTile.FuelCell, fuelCells: FissionReactorTile.FuelCell[],
+                          moderators: FissionReactorTile.Moderator[]) {
+    cell.getNeighbours(this.grid).filter(t => t.tile.type === "moderator" || t.tile.type === "shield").forEach(nb => {
+      const offset = cell.pos.map((v, i) => nb.tile.pos[i] - v) as Position;
+      if (cell.checkedModerators.some(p => p.every((v, i) => v === offset[i])))
         return;
       let pathFlux = 0;
       let moderatorPath = true;
-      if (nb.type === "moderators")
-        pathFlux += (nb.tile as FissionReactorTile.Moderator).data.fluxFactor;
+      if (nb.tile.type === "moderator")
+        pathFlux += nb.tile.data.fluxFactor;
       outer: for (let i = 1; i < this.config.fissionReactor.neutronReach+1; i++) {
         const pos = cell.pos.map((v, pi) => v + offset[pi]*i) as Position;
         if (this.isOutsideGrid(pos)) break;
         const tile = this.getGridTile(pos);
-        switch (tile.type) {
+        switch (tile.tile.type) {
           case "cell":
-            data.adjacentCells++;
+            cell.adjacentCells++;
             const nCell = fuelCells.find(v => v.pos.every((v, i) => v === pos[i]))!;
-            const nData = cell.tile as FissionReactorTile.FuelCell;
-            nData.flux += pathFlux;
-            nData.checkedModerators.push(offset.map(v => -v) as Position);
+            nCell.flux += pathFlux;
+            nCell.checkedModerators.push(offset.map(v => -v) as Position);
 
             const mod = moderators.find(({pos}) => pos.every((v, i) => v === nCell.pos[i] - offset[i]));
-            if (!mod) console.info(`moderator (offset: ${offset.map(v => -v)}) for cell @ ${nCell.pos} not found @ ${nCell.pos.map((v, i) => v - offset[i])}`);
-            else (mod.tile as FissionReactorTile.Moderator).active = true;
+            if (!mod || mod.type !== "moderator")
+              console.info(`moderator (offset: ${offset.map(v => -v)}) for cell @ ${nCell.pos} not found @ ${nCell.pos.map((v, i) => v - offset[i])}`);
+            else
+              mod.active = true;
 
-            if (nData.flux > nData.fuel.criticality) nData.primed = true;
+            if (nCell.flux > nCell.fuel.criticality) nCell.primed = true;
             break outer;
           case "moderator":
-            pathFlux += (tile.tile as FissionReactorTile.Moderator).data.fluxFactor;
+            pathFlux += tile.tile.data.fluxFactor;
             break;
           case "reflector":
-            pathFlux *= 2*(tile.tile as FissionReactorTile.Reflector).data.reflectivity;
-            data.adjacentReflectors++;
+            pathFlux *= 2*tile.tile.data.reflectivity;
+            cell.adjacentReflectors++;
             break;
           case "shield":
-            if (!(tile.tile as FissionReactorTile.Shield).open) moderatorPath = false;
+            if (!tile.tile.open) moderatorPath = false;
             break;
           case "irradiator":
             break;
@@ -142,62 +142,63 @@ export class FissionReactorGrid {
         if (!moderatorPath) break;
       }
       if (moderatorPath) {
-        data.flux += pathFlux;
-        data.checkedModerators.push(offset);
+        cell.flux += pathFlux;
+        cell.checkedModerators.push(offset);
 
         const mod = moderators.find(({pos}) => pos.every((v, i) => v === cell.pos[i] + offset[i]));
-        if (!mod) console.info(`moderator (offset: ${offset}) for cell @ ${cell.pos} not found @ ${cell.pos.map((v, i) => v + offset[i])}`);
-        else (mod.tile as FissionReactorTile.Moderator).active = true;
+        if (!mod || mod.type !== "moderator")
+          console.info(`moderator (offset: ${offset}) for cell @ ${cell.pos} not found @ ${cell.pos.map((v, i) => v + offset[i])}`);
+        else
+          mod.active = true;
       }
       // console.log(cell);
     });
-    data.calculated = true;
+    cell.calculated = true;
   }
 
 
   validate(): {valid: boolean, problems?: GridProblem[]} {
-    const fuelCells: FissionReactorTile[] = [];
-    const moderators: FissionReactorTile[] = [];
+    const fuelCells: FissionReactorTile.FuelCell[] = [];
+    const moderators: FissionReactorTile.Moderator[] = [];
     this.grid.forEach(v => v.forEach(v => v.forEach(v => {
-      switch (v.type) {
+      switch (v.tile.type) {
         case "cell":
-          fuelCells.push(v);
+          fuelCells.push(v.tile);
           break
         case "moderator":
-          moderators.push(v);
+          moderators.push(v.tile);
           break;
       }
     })));
 
-    const maxIterCount = fuelCells.reduce((s, v) => s + ((v.tile as FissionReactorTile.FuelCell).primed ? 0 : 1), 1);
+    const maxIterCount = fuelCells.reduce((s, v) => s + (v.primed ? 0 : 1), 1);
     for (let i = 0; i < maxIterCount; i++) {
-      fuelCells.filter(v => !(v.tile as FissionReactorTile.FuelCell).calculated && (v.tile as FissionReactorTile.FuelCell).primed).forEach(c => this.analyzeFuelCell(c, fuelCells, moderators));
-      if (fuelCells.every(v => (v.tile as FissionReactorTile.FuelCell).calculated)) break;
+      fuelCells.filter(v => !v.calculated && v.primed).forEach(c => this.analyzeFuelCell(c, fuelCells, moderators));
+      if (fuelCells.every(v => v.calculated)) break;
     }
 
     const gridProblems: GridProblem[] = [];
 
     this.grid.forEach((v, y) => v.forEach((v, z) => v.forEach((tile, x) => {
-      if (tile.type !== "sink") return;
-      const ruleset = (tile.tile as FissionReactorTile.Sink).data.ruleSet;
-      const neighbours = tile.getNeighbours(this.grid);
-      ruleset.forEach(rule => {
+      if (tile.tile.type !== "sink") return;
+      const neighbours = tile.tile.getNeighbours(this.grid);
+      tile.tile.data.ruleSet.forEach(rule => {
         const offsets: Position[] = [];
         neighbours.forEach(nCell => {
           switch (rule.relatedComp) {
             case "moderator":
-              if (nCell.type !== "moderator") break;
-              if (!(nCell.tile as FissionReactorTile.Moderator).active)
+              if (nCell.tile.type !== "moderator") break;
+              if (!nCell.tile.active)
                 break;
             // fallthrough
             case "wall":
             case "cell":
-              if (nCell.type === rule.relatedComp)
-                offsets.push([x, y, z].map((c, i) => nCell.pos[i] - c) as Position);
+              if (nCell.tile.type === rule.relatedComp)
+                offsets.push([x, y, z].map((c, i) => nCell.tile.pos[i] - c) as Position);
               break;
             default:
-              if (nCell.type === rule.relatedComp)
-                offsets.push([x, y, z].map((c, i) => nCell.pos[i] - c) as Position);
+              if (nCell.tile.type === rule.relatedComp)
+                offsets.push([x, y, z].map((c, i) => nCell.tile.pos[i] - c) as Position);
           }
         });
 
@@ -224,7 +225,7 @@ export class FissionReactorGrid {
 
   export(): FissionReactorExport {
     return {
-      data: this.grid.map(v => v.map(v => v.map(v => v.getId(this.dataMap)))),
+      data: this.grid.map(v => v.map(v => v.map(v => v.tile.getId(this.dataMap)))),
       dataMap: this.dataMap.version,
     }
   }

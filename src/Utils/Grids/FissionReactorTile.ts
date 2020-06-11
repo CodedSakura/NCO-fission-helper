@@ -3,26 +3,34 @@ import * as types from "../types";
 import {Config} from "../Config";
 
 export class FissionReactorTile {
-  readonly type: string;
-  readonly pos: Position;
-  readonly tile: undefined | FissionReactorTile.Tile;
+  readonly tile: FissionReactorTile.Tile;
 
   readonly config: Config;
 
   constructor(pos: Position, cfg: Config, type: string, addition?: string, priming?: string) {
-    this.type = type;
-    this.pos = pos;
+    if (!["cell","moderator","sink","reflector","shield","irradiator","air","wall"].includes(type))
+      throw new Error(`unknown type '${type}'`);
 
     this.config = cfg;
 
-    switch (this.type) {
+    const filler: FissionReactorTile.BlankTile = {
+      type: type,
+      pos: pos,
+      getId: this.getId,
+      getNeighbours: this.getNeighbours
+    };
+
+    switch (type) {
       case "cell":
         const fuel = cfg.fuels.find(v => v.name === addition);
         if (!fuel) throw new FissionReactorTile.AdditionError(type, addition);
-        const priming = cfg.neutronSources.find(v => v.name === addition);
-        if (!priming) throw new FissionReactorTile.PrimingError(priming);
+        const _priming = cfg.neutronSources.find(v => v.name === priming);
+        if (!_priming) throw new FissionReactorTile.PrimingError(_priming);
         this.tile = {
-          priming: fuel.selfPriming ? "self" : priming || "none",
+          ...filler,
+          type: "cell",
+
+          priming: _priming,
           primed: fuel.selfPriming,
           fuel: fuel,
           cluster: undefined,
@@ -34,50 +42,68 @@ export class FissionReactorTile {
 
           calculated: false,
           checkedModerators: []
-        } as FissionReactorTile.FuelCell;
+        };
         break;
       case "moderator":
         const moderator = cfg.moderators.find(v => v.name === addition);
         if (!moderator) throw new FissionReactorTile.AdditionError(type, addition);
         this.tile = {
+          ...filler,
+          type: "moderator",
+
           active: false,
           data: moderator
-        } as FissionReactorTile.Moderator;
+        };
         break;
       case "sink":
         const sink = cfg.sinks.find(v => v.name === addition);
         if (!sink) throw new FissionReactorTile.AdditionError(type, addition);
         this.tile = {
+          ...filler,
+          type: "sink",
+
           data: sink,
           cluster: undefined
-        } as FissionReactorTile.Sink;
+        };
         break;
       case "reflector":
         const reflector = cfg.reflectors.find(v => v.name === addition);
         if (!reflector) throw new FissionReactorTile.AdditionError(type, addition);
         this.tile = {
+          ...filler,
+          type: "reflector",
+
           data: reflector
-        } as FissionReactorTile.Reflector;
+        };
         break;
       case "irradiator":
         this.tile = {
+          ...filler,
+          type: "irradiator",
+
           flux: 0
-        } as FissionReactorTile.Irradiator;
+        };
         break;
       case "shield":
         const shield = cfg.shields.find(v => v.name === addition);
         if (!shield) throw new FissionReactorTile.AdditionError(type, addition);
         this.tile = {
+          ...filler,
+          type: "shield",
+
           cluster: undefined,
           open: true,
           data: shield
-        } as FissionReactorTile.Shield;
+        };
         break;
+      default:
+        this.tile = {...filler, type: type as "air"|"wall"};
     }
   }
 
-  getNeighbours(grid: FissionReactorTile[][][]): FissionReactorTile[] {
-    const [x,y,z] = this.pos;
+  private getNeighbours = (grid: FissionReactorTile[][][]): FissionReactorTile[] => {
+
+    const [x,y,z] = this.tile.pos;
     const isOutsideGrid = ([x,y,z]: Position) => x < 0 || y < 0 || z < 0 || y >= grid.length || z >= grid[y].length || x >= grid[y][z].length;
     return ([[x+1, y, z], [x-1, y, z], [x, y+1, z], [x, y-1, z], [x, y, z+1], [x, y, z-1]] as Position[]).map(pos => {
       if (isOutsideGrid(pos)) {
@@ -88,11 +114,11 @@ export class FissionReactorTile {
     });
   }
 
-  getId(dm: any): number {
+  private getId = (dm: any): number => {
     const {fuelTypes, fuelTypeOrder, fuelTypeBitCount, fuelBitCount} = dm.fuel;
     const {indicatorOrder, indicatorBitCount, neutronSourceOrder, components} = dm.fission;
 
-    switch (this.type) {
+    switch (this.tile.type) {
       case "cell": {
         const {fuel, priming} = (this.tile! as FissionReactorTile.FuelCell);
         return indicatorOrder.indexOf("cell") | (
@@ -105,22 +131,22 @@ export class FissionReactorTile {
       }
       case "moderator": {
         const {data} = (this.tile! as FissionReactorTile.Moderator);
-        return indicatorOrder.indexOf(this.type) | (components[this.type].indexOf(data.name) << indicatorBitCount);
+        return indicatorOrder.indexOf(this.tile.type) | (components[this.tile.type].indexOf(data.name) << indicatorBitCount);
       }
       case "sink": {
         const {data} = (this.tile! as FissionReactorTile.Sink);
-        return indicatorOrder.indexOf(this.type) | (components[this.type].indexOf(data.name) << indicatorBitCount);
+        return indicatorOrder.indexOf(this.tile.type) | (components[this.tile.type].indexOf(data.name) << indicatorBitCount);
       }
       case "reflector": {
         const {data} = (this.tile! as FissionReactorTile.Reflector);
-        return indicatorOrder.indexOf(this.type) | (components[this.type].indexOf(data.name) << indicatorBitCount);
+        return indicatorOrder.indexOf(this.tile.type) | (components[this.tile.type].indexOf(data.name) << indicatorBitCount);
       }
       case "shield": {
         const {data} = (this.tile! as FissionReactorTile.Shield);
-        return indicatorOrder.indexOf(this.type) | (components[this.type].indexOf(data.name) << indicatorBitCount);
+        return indicatorOrder.indexOf(this.tile.type) | (components[this.tile.type].indexOf(data.name) << indicatorBitCount);
       }
       default: {
-        return indicatorOrder.indexOf(this.type);
+        return indicatorOrder.indexOf(this.tile.type);
       }
     }
   }
@@ -138,13 +164,21 @@ export class FissionReactorTile {
 }
 
 // eslint-disable-next-line no-redeclare
-export namespace FissionReactorTile {
+export declare namespace FissionReactorTile {
   export interface Cluster {
     casingConnection: boolean
     heat: number
   }
 
-  export interface FuelCell {
+  export interface BlankTile {
+    type: string
+    pos: Position
+    getId: (dm: any) => number
+    getNeighbours: (grid: FissionReactorTile[][][]) => FissionReactorTile[]
+  }
+
+  export interface FuelCell extends BlankTile {
+    type: "cell"
     priming: NeutronSource
     primed: boolean
     fuel: Fuel
@@ -160,25 +194,36 @@ export namespace FissionReactorTile {
     calculated: boolean
     checkedModerators: Position[]
   }
-  export interface Moderator {
+  export interface Moderator extends BlankTile {
+    type: "moderator"
     active: boolean
     data: types.Moderator
   }
-  export interface Sink {
+  export interface Sink extends BlankTile {
+    type: "sink"
     cluster?: Cluster
     data: types.Sink
   }
-  export interface Reflector {
+  export interface Reflector extends BlankTile {
+    type: "reflector"
     data: types.Reflector
   }
-  export interface Irradiator {
+  export interface Irradiator extends BlankTile {
+    type: "irradiator"
     flux: number
   }
-  export interface Shield {
+  export interface Shield extends BlankTile {
+    type: "shield"
     data: types.Shield
     cluster?: Cluster
     open: boolean
   }
+  export interface Wall extends BlankTile {
+    type: "wall"
+  }
+  export interface Air extends BlankTile {
+    type: "air"
+  }
 
-  export type Tile = FuelCell|Moderator|Sink|Reflector|Irradiator|Shield;
+  export type Tile = Wall|Air|FuelCell|Moderator|Sink|Reflector|Irradiator|Shield;
 }
