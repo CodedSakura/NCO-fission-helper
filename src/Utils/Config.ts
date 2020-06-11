@@ -50,7 +50,10 @@ export class Config {
   shields: Shield[] = [];
   reflectors: Reflector[] = [];
   fuels: Fuel[] = [];
-  neutronSources: NeutronSource[] = [];
+  neutronSources: NeutronSource[] = [
+    {efficiency: 0, name: "none"},
+    {efficiency: 1, name: "self"}
+  ];
 
   blades: Blade[] = [];
   coils: Coil[] = [];
