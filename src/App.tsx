@@ -5,22 +5,35 @@ import {getReactorFromHellrageConfig} from "./Utils/parsers/HellragePlanner";
 import {Config} from "./Utils/Config";
 
 import sampleC from "./Utils/parsers/[ZA]HEA-242 4 x 2 x 4.json";
+import FissionReactor from "./Components/FissionReactor";
+import {FissionReactorGrid} from "./Utils/Grids/FissionReactorGrid";
 
 
 class App extends React.Component {
+  state: {reactor: FissionReactorGrid|undefined} = {reactor: undefined}
+
+  componentDidMount() {
+    fetch("./nuclearcraft_default.cfg").then(r => r.text()).then(t => {
+      const cfg = new Config(t, "0.0.1");
+      const r = getReactorFromHellrageConfig(sampleC, cfg);
+      this.setState({reactor: r});
+    });
+  }
+
   render() {
     return <>
       Hello React!
+      {this.state.reactor ? <FissionReactor reactor={this.state.reactor}/> : undefined}
       {/*<Grid2D data={[[[]]]}/>*/}
     </>;
   }
 }
 
-fetch("./nuclearcraft_default.cfg").then(r => r.text()).then(t => {
-  const cfg = new Config(t, "0.0.1");
-  const r = getReactorFromHellrageConfig(sampleC, cfg);
-  console.log(r);
-  console.log(r.validate());
+// fetch("./nuclearcraft_default.cfg").then(r => r.text()).then(t => {
+//   const cfg = new Config(t, "0.0.1");
+//   const r = getReactorFromHellrageConfig(sampleC, cfg);
+//   console.log(r);
+//   console.log(r.validate());
 /*  const original = getReactorFromHellrageConfig(sampleA, cfg).export().data;
   const imported = FissionReactorGrid.import(original, cfg, "0.0.1").export().data;
   console.log(imported.every((v, y) => v.every((v, z) => v.every((v, x) => v === original[y][z][x]))));
@@ -67,7 +80,7 @@ fetch("./nuclearcraft_default.cfg").then(r => r.text()).then(t => {
   r2.setTile([3, 2, 3], "sink", "water");
   console.log(r2);
   console.log(r2.validate());*/
-});
+// });
 
 
 export default App;
