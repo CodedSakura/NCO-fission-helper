@@ -18,7 +18,7 @@ export class SFRTile {
       pos: pos,
       getId: this.getId,
       getNeighbours: this.getNeighbours,
-      getAsset: undefined,
+      asset: undefined,
     };
 
     switch (type) {
@@ -30,7 +30,7 @@ export class SFRTile {
         this.tile = {
           ...filler,
           type: "cell",
-          getAsset: require("../../Assets/fission/cell.png"),
+          asset: require("../../Assets/fission/cell.png"),
 
           priming: _priming,
           primed: fuel.selfPriming,
@@ -52,7 +52,7 @@ export class SFRTile {
         this.tile = {
           ...filler,
           type: "moderator",
-          getAsset: require(`../../Assets/fission/moderator/${moderator.name}.png`),
+          asset: require(`../../Assets/fission/moderator/${moderator.name}.png`),
 
           active: false,
           data: moderator
@@ -64,7 +64,7 @@ export class SFRTile {
         this.tile = {
           ...filler,
           type: "sink",
-          getAsset: require(`../../Assets/fission/sink/${sink.name}.png`),
+          asset: require(`../../Assets/fission/sink/${sink.name}.png`),
 
           data: sink,
           cluster: undefined
@@ -76,7 +76,7 @@ export class SFRTile {
         this.tile = {
           ...filler,
           type: "reflector",
-          getAsset: require(`../../Assets/fission/reflector/${reflector.name}.png`),
+          asset: require(`../../Assets/fission/reflector/${reflector.name}.png`),
 
           data: reflector
         };
@@ -85,7 +85,7 @@ export class SFRTile {
         this.tile = {
           ...filler,
           type: "irradiator",
-          getAsset: require(`../../Assets/fission/irradiator.png`),
+          asset: require(`../../Assets/fission/irradiator.png`),
 
           flux: 0
         };
@@ -96,7 +96,7 @@ export class SFRTile {
         this.tile = {
           ...filler,
           type: "shield",
-          getAsset: require(`../../Assets/fission/shield/${shield.name}.png`),
+          asset: require(`../../Assets/fission/shield/${shield.name}.png`),
 
           cluster: undefined,
           open: true,
@@ -107,7 +107,7 @@ export class SFRTile {
         this.tile = {
           ...filler,
           type: type as "air"|"wall",
-          getAsset: require(type === "wall" ? "../../Assets/fission/wall.png" : "../../Assets/air.png")
+          asset: require(type === "wall" ? "../../Assets/fission/wall.png" : "../../Assets/air.png")
         };
     }
   }
@@ -174,7 +174,7 @@ export declare namespace SFRTile {
     pos: Position
     getId: (dm: any) => number
     getNeighbours: (grid: SFRTile[][][]) => SFRTile[]
-    getAsset: any
+    asset: any
   }
 
   export interface FuelCell extends BlankTile {

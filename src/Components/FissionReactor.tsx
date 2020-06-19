@@ -5,10 +5,22 @@ interface Props {
   reactor: SFRGrid
 }
 
-class FissionReactor extends Component<Props> {
+interface State {
+  layer: number
+}
+
+class FissionReactor extends Component<Props, State> {
+  state: State = {
+    layer: 0,
+  };
 
   render() {
-    return <div/>
+    const {grid} = this.props.reactor;
+    return <div className="flex__rows flex--center">
+      {grid[this.state.layer].map((v, k) => <div key={k} className="flex__cols">
+        {v.map((v, k) => <img key={k} src={v.tile.asset} alt={v.tile.type} className="crisp"/>)}
+      </div>)}
+    </div>
   }
 }
 

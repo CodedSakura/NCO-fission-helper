@@ -44,6 +44,7 @@
     &:hover:not(.navigation--active) {
       color: #fffa;
       background-color: #fff1;
+      text-decoration: none;
     }
   }
 
@@ -51,6 +52,9 @@
     cursor: default;
     color: #fffe;
     background-color: #fff2;
+    &:hover {
+      text-decoration: none;
+    }
   }
 }
 
@@ -87,7 +91,18 @@
     width: 48px;
     display: block;
   }
-  image-rendering: pixelated;
-  image-rendering: -moz-crisp-edges;
-  image-rendering: crisp-edges;
+}
+
+.flex {
+  &__rows {
+    display: flex;
+    flex-direction: column;
+  }
+  &__cols {
+    display: flex;
+    flex-direction: row;
+  }
+  &--center {
+    align-items: center;
+  }
 }

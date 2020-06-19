@@ -70,23 +70,23 @@ class App extends React.Component<{}, State> {
           <div className="block_picker">
             {
               dataMap["0.0.1"].fission.components.sink.map((v: string) =>
-                <img key={v} src={require(`./Assets/fission/sink/${v}.png`)} alt={v}/>)
+                <img key={v} src={require(`./Assets/fission/sink/${v}.png`)} alt={v} className={"crisp"}/>)
             }
           </div>
           <div className="stats">stats</div>
         </div>
         <div className="grid_container">
           <div className="navigation">
-            <a href="/" className="navigation--active">option a1</a>
-            <a href="/">option a2</a>
+            <a href="/" className="navigation--active">Solid Fusion Reactors</a>
+            <a href="/">Molten Salt Reactors [WIP]</a>
+            <a href="/">Turbines [WIP]</a>
+            <a href="/">Linear Accelerators [WIP]</a>
           </div>
           <div className="navigation">
-            <a href="/">option b1</a>
-            <a href="/" className="navigation--active">option b2</a>
-            <a href="/">option b3</a>
+            <a href="/" className="navigation--active">Unnamed Reactor</a>
+            <a href="/">+</a>
           </div>
           <div className="grid_base">
-            this is the reactor container
             {this.state.reactor ? <FissionReactor reactor={this.state.reactor}/> : undefined}
           </div>
         </div>
