@@ -1,0 +1,93 @@
+.main_container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: row;
+}
+
+.sidebar {
+  flex: 0 0 214px;
+  display: flex;
+  flex-direction: column;
+  border-right: solid 1px #fff4;
+  > * {
+    &:not(:first-child) {
+      border-top: 1px solid #fff5;
+      padding: 3px 5px;
+    }
+  }
+}
+
+.grid_container {
+  flex: 1 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.navigation {
+  padding-top: 4px;
+  border-bottom: 1px solid #fff5;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-end;
+  border-collapse: collapse;
+  flex-wrap: wrap;
+  > * {
+    padding: 2px 4px;
+    color: #fff9;
+    text-decoration: none;
+    border: 1px solid #fff9;
+    border-bottom: none;
+    cursor: pointer;
+    &:not(:first-child) {
+      border-left: none;
+    }
+    &:hover:not(.navigation--active) {
+      color: #fffa;
+      background-color: #fff1;
+    }
+  }
+
+  &--active {
+    cursor: default;
+    color: #fffe;
+    background-color: #fff2;
+  }
+}
+
+.burger_menu {
+  $size: 36px;
+  height: $size;
+  width: $size;
+  fill: #fffa;
+}
+
+.title {
+  font-size: 24px;
+  line-height: 40px;
+  display: flex;
+  height: 40px;
+}
+
+.dim_select {
+  > div {
+    text-align: center;
+    > input {
+      width: 30px;
+    }
+  }
+}
+
+.block_picker {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  img {
+    cursor: pointer;
+    padding: 1.5px;
+    width: 48px;
+    display: block;
+  }
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+}
