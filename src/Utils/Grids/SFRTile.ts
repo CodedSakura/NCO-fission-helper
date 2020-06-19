@@ -2,8 +2,8 @@ import {Position, Fuel, NeutronSource} from "../types";
 import * as types from "../types";
 import {Config} from "../Config";
 
-export class FissionReactorTile {
-  readonly tile: FissionReactorTile.Tile;
+export class SFRTile {
+  readonly tile: SFRTile.Tile;
 
   readonly config: Config;
 
@@ -13,22 +13,24 @@ export class FissionReactorTile {
 
     this.config = cfg;
 
-    const filler: FissionReactorTile.BlankTile = {
+    const filler: SFRTile.BlankTile = {
       type: type,
       pos: pos,
       getId: this.getId,
-      getNeighbours: this.getNeighbours
+      getNeighbours: this.getNeighbours,
+      getAsset: undefined,
     };
 
     switch (type) {
       case "cell":
         const fuel = cfg.fuels.find(v => v.name === addition);
-        if (!fuel) throw new FissionReactorTile.AdditionError(type, addition);
+        if (!fuel) throw new SFRTile.AdditionError(type, addition);
         const _priming = cfg.neutronSources.find(v => v.name === priming);
-        if (!_priming) throw new FissionReactorTile.PrimingError(_priming);
+        if (!_priming) throw new SFRTile.PrimingError(_priming);
         this.tile = {
           ...filler,
           type: "cell",
+          getAsset: require("../../Assets/fission/cell.png"),
 
           priming: _priming,
           primed: fuel.selfPriming,
@@ -46,10 +48,11 @@ export class FissionReactorTile {
         break;
       case "moderator":
         const moderator = cfg.moderators.find(v => v.name === addition);
-        if (!moderator) throw new FissionReactorTile.AdditionError(type, addition);
+        if (!moderator) throw new SFRTile.AdditionError(type, addition);
         this.tile = {
           ...filler,
           type: "moderator",
+          getAsset: require(`../../Assets/fission/moderator/${moderator.name}.png`),
 
           active: false,
           data: moderator
@@ -57,10 +60,11 @@ export class FissionReactorTile {
         break;
       case "sink":
         const sink = cfg.sinks.find(v => v.name === addition);
-        if (!sink) throw new FissionReactorTile.AdditionError(type, addition);
+        if (!sink) throw new SFRTile.AdditionError(type, addition);
         this.tile = {
           ...filler,
           type: "sink",
+          getAsset: require(`../../Assets/fission/sink/${sink.name}.png`),
 
           data: sink,
           cluster: undefined
@@ -68,10 +72,11 @@ export class FissionReactorTile {
         break;
       case "reflector":
         const reflector = cfg.reflectors.find(v => v.name === addition);
-        if (!reflector) throw new FissionReactorTile.AdditionError(type, addition);
+        if (!reflector) throw new SFRTile.AdditionError(type, addition);
         this.tile = {
           ...filler,
           type: "reflector",
+          getAsset: require(`../../Assets/fission/reflector/${reflector.name}.png`),
 
           data: reflector
         };
@@ -80,16 +85,18 @@ export class FissionReactorTile {
         this.tile = {
           ...filler,
           type: "irradiator",
+          getAsset: require(`../../Assets/fission/irradiator.png`),
 
           flux: 0
         };
         break;
       case "shield":
         const shield = cfg.shields.find(v => v.name === addition);
-        if (!shield) throw new FissionReactorTile.AdditionError(type, addition);
+        if (!shield) throw new SFRTile.AdditionError(type, addition);
         this.tile = {
           ...filler,
           type: "shield",
+          getAsset: require(`../../Assets/fission/shield/${shield.name}.png`),
 
           cluster: undefined,
           open: true,
@@ -97,17 +104,21 @@ export class FissionReactorTile {
         };
         break;
       default:
-        this.tile = {...filler, type: type as "air"|"wall"};
+        this.tile = {
+          ...filler,
+          type: type as "air"|"wall",
+          getAsset: require(type === "wall" ? "../../Assets/fission/wall.png" : "../../Assets/air.png")
+        };
     }
   }
 
-  private getNeighbours = (grid: FissionReactorTile[][][]): FissionReactorTile[] => {
+  private getNeighbours = (grid: SFRTile[][][]): SFRTile[] => {
 
     const [x,y,z] = this.tile.pos;
     const isOutsideGrid = ([x,y,z]: Position) => x < 0 || y < 0 || z < 0 || y >= grid.length || z >= grid[y].length || x >= grid[y][z].length;
     return ([[x+1, y, z], [x-1, y, z], [x, y+1, z], [x, y-1, z], [x, y, z+1], [x, y, z-1]] as Position[]).map(pos => {
       if (isOutsideGrid(pos)) {
-        return new FissionReactorTile(pos, this.config, "wall");
+        return new SFRTile(pos, this.config, "wall");
       } else {
         return grid[pos[1]][pos[2]][pos[1]];
       }
@@ -120,7 +131,7 @@ export class FissionReactorTile {
 
     switch (this.tile.type) {
       case "cell": {
-        const {fuel, priming} = (this.tile! as FissionReactorTile.FuelCell);
+        const {fuel, priming} = (this.tile as SFRTile.FuelCell);
         return indicatorOrder.indexOf("cell") | (
           (fuelTypeOrder.indexOf(fuel.type) | (
               (fuelTypes[fuel.type].indexOf(fuel.name) | (
@@ -129,25 +140,13 @@ export class FissionReactorTile {
               ) << fuelTypeBitCount)
           ) << indicatorBitCount);
       }
-      case "moderator": {
-        const {data} = (this.tile! as FissionReactorTile.Moderator);
-        return indicatorOrder.indexOf(this.tile.type) | (components[this.tile.type].indexOf(data.name) << indicatorBitCount);
-      }
-      case "sink": {
-        const {data} = (this.tile! as FissionReactorTile.Sink);
-        return indicatorOrder.indexOf(this.tile.type) | (components[this.tile.type].indexOf(data.name) << indicatorBitCount);
-      }
-      case "reflector": {
-        const {data} = (this.tile! as FissionReactorTile.Reflector);
-        return indicatorOrder.indexOf(this.tile.type) | (components[this.tile.type].indexOf(data.name) << indicatorBitCount);
-      }
-      case "shield": {
-        const {data} = (this.tile! as FissionReactorTile.Shield);
-        return indicatorOrder.indexOf(this.tile.type) | (components[this.tile.type].indexOf(data.name) << indicatorBitCount);
-      }
-      default: {
+      case "shield":
+      case "reflector":
+      case "sink":
+      case "moderator":
+        return indicatorOrder.indexOf(this.tile.type) | (components[this.tile.type].indexOf(this.tile.data.name) << indicatorBitCount);
+      default:
         return indicatorOrder.indexOf(this.tile.type);
-      }
     }
   }
 
@@ -164,7 +163,7 @@ export class FissionReactorTile {
 }
 
 // eslint-disable-next-line no-redeclare
-export declare namespace FissionReactorTile {
+export declare namespace SFRTile {
   export interface Cluster {
     casingConnection: boolean
     heat: number
@@ -174,7 +173,8 @@ export declare namespace FissionReactorTile {
     type: string
     pos: Position
     getId: (dm: any) => number
-    getNeighbours: (grid: FissionReactorTile[][][]) => FissionReactorTile[]
+    getNeighbours: (grid: SFRTile[][][]) => SFRTile[]
+    getAsset: any
   }
 
   export interface FuelCell extends BlankTile {

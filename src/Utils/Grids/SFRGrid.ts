@@ -1,7 +1,7 @@
 import {dataMap, latestDM} from "../dataMap";
 import {FissionReactorExport, GridProblem, Position} from "../types";
 import {Config} from "../Config";
-import {FissionReactorTile} from "./FissionReactorTile";
+import {SFRTile} from "./SFRTile";
 
 interface Dimensions {
   width: number
@@ -9,8 +9,8 @@ interface Dimensions {
   depth: number
 }
 
-export class FissionReactorGrid {
-  grid: FissionReactorTile[][][] = [];
+export class SFRGrid {
+  grid: SFRTile[][][] = [];
   config: Config;
   dataMap: any = latestDM;
 
@@ -32,7 +32,7 @@ export class FissionReactorGrid {
       for (let z = 0; z < depth; z++) {
         this.grid[y].push([]);
         for (let x = 0; x < width; x++) {
-          this.grid[y][z].push(new FissionReactorTile([x,y,z], this.config, "air"));
+          this.grid[y][z].push(new SFRTile([x,y,z], this.config, "air"));
         }
       }
     }
@@ -45,7 +45,7 @@ export class FissionReactorGrid {
     if (components[type].indexOf(tile) < 0) throw new Error(`tile '${tile}' in not valid`);
     if (type === "cell") throw new Error("cells should be added using setCell");
 
-    this.setGridTile(pos, new FissionReactorTile(pos, this.config, type, tile));
+    this.setGridTile(pos, new SFRTile(pos, this.config, type, tile));
   }
   setCell(pos: Position, fuelName: string, priming: string) {
     if (this.isOutsideGrid(pos)) throw new Error("coordinates outside grid");
@@ -57,7 +57,7 @@ export class FissionReactorGrid {
     if (neutronSourceOrder.indexOf(priming) < 0)
       throw new Error(`no such priming method '${priming}'`);
 
-    this.setGridTile(pos, new FissionReactorTile(pos, this.config, "cell", fuelName, priming));
+    this.setGridTile(pos, new SFRTile(pos, this.config, "cell", fuelName, priming));
   }
 
   shieldsToggle() {
@@ -86,17 +86,17 @@ export class FissionReactorGrid {
     return x < 0 || y < 0 || z < 0 || y >= this.grid.length || z >= this.grid[y].length || x >= this.grid[y][z].length;
   }
 
-  private getGridTile(pos: Position): FissionReactorTile {
+  private getGridTile(pos: Position): SFRTile {
     if (this.isOutsideGrid(pos)) throw new Error("coordinates outside grid");
     return this.grid[pos[1]][pos[2]][pos[0]];
   }
-  private setGridTile(pos: Position, val: FissionReactorTile) {
+  private setGridTile(pos: Position, val: SFRTile) {
     if (this.isOutsideGrid(pos)) throw new Error("coordinates outside grid");
     this.grid[pos[1]][pos[2]][pos[0]] = val;
   }
 
-  private analyzeFuelCell(cell: FissionReactorTile.FuelCell, fuelCells: FissionReactorTile.FuelCell[],
-                          moderators: FissionReactorTile.Moderator[]) {
+  private analyzeFuelCell(cell: SFRTile.FuelCell, fuelCells: SFRTile.FuelCell[],
+                          moderators: SFRTile.Moderator[]) {
     cell.getNeighbours(this.grid).filter(t => t.tile.type === "moderator" || t.tile.type === "shield").forEach(nb => {
       const offset = cell.pos.map((v, i) => nb.tile.pos[i] - v) as Position;
       if (cell.checkedModerators.some(p => p.every((v, i) => v === offset[i])))
@@ -158,8 +158,8 @@ export class FissionReactorGrid {
 
 
   validate(): {valid: boolean, problems?: GridProblem[]} {
-    const fuelCells: FissionReactorTile.FuelCell[] = [];
-    const moderators: FissionReactorTile.Moderator[] = [];
+    const fuelCells: SFRTile.FuelCell[] = [];
+    const moderators: SFRTile.Moderator[] = [];
     this.grid.forEach(v => v.forEach(v => v.forEach(v => {
       switch (v.tile.type) {
         case "cell":
@@ -234,7 +234,7 @@ export class FissionReactorGrid {
     if (dataMapVersion !== "custom" && !(dataMapVersion in dataMap))
       throw new Error("unknown dataMap");
     const dm = _dataMap ? _dataMap : dataMap[dataMapVersion];
-    const r = new FissionReactorGrid(config, {height: data.length, depth: data[0].length, width: data[0][0].length}, dataMapVersion, _dataMap);
+    const r = new SFRGrid(config, {height: data.length, depth: data[0].length, width: data[0][0].length}, dataMapVersion, _dataMap);
     for (let y = 0; y < data.length; y++) {
       for (let z = 0; z < data[y].length; z++) {
         for (let x = 0; x < data[y][z].length; x++) {

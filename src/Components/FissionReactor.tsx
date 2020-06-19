@@ -1,14 +1,13 @@
 import React, {Component} from 'react';
-import {FissionReactorGrid} from "../Utils/Grids/FissionReactorGrid";
+import {SFRGrid} from "../Utils/Grids/SFRGrid";
 
 interface Props {
-  reactor: FissionReactorGrid
+  reactor: SFRGrid
 }
 
 class FissionReactor extends Component<Props> {
 
   render() {
-    console.log("render");
     return <div/>
   }
 }

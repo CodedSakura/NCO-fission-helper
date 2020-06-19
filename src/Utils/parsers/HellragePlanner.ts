@@ -1,4 +1,4 @@
-import {FissionReactorGrid} from "../Grids/FissionReactorGrid";
+import {SFRGrid} from "../Grids/SFRGrid";
 import {Config} from "../Config";
 import {latestDM} from "../dataMap";
 
@@ -72,9 +72,9 @@ type HellrageConfig = {
   }
 }
 
-export function getReactorFromHellrageConfig(data: any, config: Config) {
+export function getReactorFromHellrageConfig(data: object, config: Config) {
   const d = data as HellrageConfig;
-  const r = new FissionReactorGrid(config, {width: d.Data.InteriorDimensions.X, height: d.Data.InteriorDimensions.Y, depth: d.Data.InteriorDimensions.Z}, latestDM.version);
+  const r = new SFRGrid(config, {width: d.Data.InteriorDimensions.X, height: d.Data.InteriorDimensions.Y, depth: d.Data.InteriorDimensions.Z}, latestDM.version);
 
   Object.keys(d.Data.FuelCells).forEach(v => {
     const processed = v.split(";")[0].match(/\[(?<subtype>.*)](?<fueltype>.*)/);

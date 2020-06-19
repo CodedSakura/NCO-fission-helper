@@ -6,7 +6,7 @@ import {Config} from "./Utils/Config";
 
 import sampleC from "./Utils/parsers/ZAHEB-248_23_x_23_x_23.json";
 import FissionReactor from "./Components/FissionReactor";
-import {FissionReactorGrid} from "./Utils/Grids/FissionReactorGrid";
+import {SFRGrid} from "./Utils/Grids/SFRGrid";
 import BurgerMenu from "./Components/BurgerMenu";
 import {dataMap} from "./Utils/dataMap";
 import DarkenedBackground from "./Components/DarkenedBackground";
@@ -14,7 +14,7 @@ import {overlayClosedEvent, overlayCloseInvokeEvent, overlayOpenInvokeEvent} fro
 
 
 interface State {
-  reactor: FissionReactorGrid|undefined
+  reactor: SFRGrid|undefined
   overlay: boolean
 }
 
@@ -70,7 +70,7 @@ class App extends React.Component<{}, State> {
           <div className="block_picker">
             {
               dataMap["0.0.1"].fission.components.sink.map((v: string) =>
-                <img key={v} src={require(`./Asstets/fission/sinks/${v}.png`)} alt={v}/>)
+                <img key={v} src={require(`./Assets/fission/sink/${v}.png`)} alt={v}/>)
             }
           </div>
           <div className="stats">stats</div>
