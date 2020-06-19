@@ -76,8 +76,6 @@ export function getReactorFromHellrageConfig(data: any, config: Config) {
   const d = data as HellrageConfig;
   const r = new FissionReactorGrid(config, {width: d.Data.InteriorDimensions.X, height: d.Data.InteriorDimensions.Y, depth: d.Data.InteriorDimensions.Z}, latestDM.version);
 
-  console.log(r);
-
   Object.keys(d.Data.FuelCells).forEach(v => {
     const processed = v.split(";")[0].match(/\[(?<subtype>.*)](?<fueltype>.*)/);
 

@@ -5,3 +5,7 @@ export const classMap = (...classes: (any)[]): string|undefined => {
     else if (c) out += " " + c;
   return out.trim() || undefined;
 };
+
+export function getScrollbarWidth() {
+  return window.innerWidth - document.documentElement.clientWidth;
+}
