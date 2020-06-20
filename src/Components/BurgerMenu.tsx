@@ -1,13 +1,15 @@
 import React, {Component} from 'react';
 import {overlayOpenInvokeEvent} from "../Utils/events";
 
+import "../Style/BugerMenu.scss";
+
 class BurgerMenu extends Component {
   render() {
     return <div>
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 9 9" width="32" height="32" className="burger_menu" onClick={this.openMenu}>
-        <rect x="1" y="1" width="7" height="1"/>
-        <rect x="1" y="4" width="7" height="1"/>
-        <rect x="1" y="7" width="7" height="1"/>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="-5 -5 18 18" width="36" height="36" className="burger_menu" onClick={this.openMenu}>
+        <rect y="2" width="50%" height="1"/>
+        <rect y="4.5" width="50%" height="1"/>
+        <rect y="7" width="50%" height="1"/>
       </svg>
     </div>
   }
