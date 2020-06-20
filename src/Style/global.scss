@@ -2,4 +2,19 @@ body {
   background-color: #212121;
   color: #fffe;
   font-family: Roboto, sans-serif;
+  margin: 0;
+}
+
+a {
+  color: #039BE5;
+  text-decoration: none;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+img.crisp {
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
 }

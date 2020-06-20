@@ -1,19 +1,20 @@
-.__menu_radial {
+.menu {
   position: fixed;
   transform: translate(-50%, -50%);
 
-  &-indicator {
+  &__indicator {
     position: absolute;
     stroke-width: 7;
-    &-fg {
+    &--fg {
       stroke: #fffe;
     }
-    &-bg {
+    &--bg {
       stroke: #fff6;
     }
   }
 
-  &-select {
+  &__select {
+    $select: &;
     position: absolute;
     transform: translate(-50%, -50%);
     align-items: center;
@@ -21,16 +22,23 @@
     color: #fff6;
     user-select: none;
     text-align: center;
-    width: 100px;
-  }
-  &-active {
-    background-color: #0091EA;
-    border-radius: 2px;
-    color: #fff;
-    transform: translate(-50%, -50%) scale(1.15);
-  }
-  &-selection:not(&-active) {
-    color: #fffe;
-    transform: translate(-50%, -50%) scale(1.2);
+    white-space: nowrap;
+    &--highlight {
+      background-color: #0091EA;
+      border-radius: 2px;
+      color: #fff;
+      transform: translate(-50%, -50%) scale(1.15);
+    }
+    &--selection:not(&--highlight) {
+      color: #fffe;
+      transform: translate(-50%, -50%) scale(1.2);
+    }
+    &--nested {
+      color: #dfd9;
+      &#{$select}--selection {
+        color: #dfde;
+        transform: translate(-50%, -50%) scale(1.2);
+      }
+    }
   }
 }

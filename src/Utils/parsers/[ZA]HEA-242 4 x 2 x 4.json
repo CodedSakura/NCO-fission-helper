@@ -1,0 +1,129 @@
+{
+  "SaveVersion": {
+    "Major": 2,
+    "Minor": 1,
+    "Build": 7,
+    "Revision": 0,
+    "MajorRevision": 0,
+    "MinorRevision": 0
+  },
+  "Data": {
+    "HeatSinks": {
+      "Iron": [
+        {
+          "X": 3.0,
+          "Y": 2.0,
+          "Z": 2.0
+        },
+        {
+          "X": 3.0,
+          "Y": 2.0,
+          "Z": 4.0
+        }
+      ],
+      "Gold": [
+        {
+          "X": 3.0,
+          "Y": 2.0,
+          "Z": 3.0
+        }
+      ]
+    },
+    "Moderators": {
+      "Graphite": [
+        {
+          "X": 1.0,
+          "Y": 1.0,
+          "Z": 3.0
+        },
+        {
+          "X": 2.0,
+          "Y": 1.0,
+          "Z": 4.0
+        },
+        {
+          "X": 3.0,
+          "Y": 1.0,
+          "Z": 2.0
+        },
+        {
+          "X": 3.0,
+          "Y": 1.0,
+          "Z": 4.0
+        }
+      ],
+      "Beryllium": [
+        {
+          "X": 1.0,
+          "Y": 1.0,
+          "Z": 2.0
+        },
+        {
+          "X": 2.0,
+          "Y": 1.0,
+          "Z": 1.0
+        }
+      ],
+      "HeavyWater": []
+    },
+    "Conductors": [],
+    "Reflectors": {
+      "Beryllium-Carbon": [
+        {
+          "X": 3.0,
+          "Y": 1.0,
+          "Z": 3.0
+        }
+      ]
+    },
+    "FuelCells": {
+      "[ZA]HEA-242;False;None": [
+        {
+          "X": 1.0,
+          "Y": 1.0,
+          "Z": 1.0
+        }
+      ],
+      "[ZA]HEA-242;True;Cf-252": [
+        {
+          "X": 1.0,
+          "Y": 1.0,
+          "Z": 4.0
+        },
+        {
+          "X": 3.0,
+          "Y": 1.0,
+          "Z": 1.0
+        }
+      ]
+    },
+    "Irradiators": {
+      "{\"HeatPerFlux\":0,\"EfficiencyMultiplier\":0.0}": [
+        {
+          "X": 4.0,
+          "Y": 1.0,
+          "Z": 4.0
+        }
+      ]
+    },
+    "NeutronShields": {},
+    "InteriorDimensions": {
+      "X": 4.0,
+      "Y": 2.0,
+      "Z": 4.0
+    },
+    "CoolantRecipeName": "Water to High Pressure Steam",
+    "OverallStats": {
+      "TotalOutput": 408.658957632952,
+      "RawOutput": 6538.5433221272324,
+      "TotalHeatPerTick": 8784.0,
+      "TotalCoolingPerTick": 0.0,
+      "NetHeatPerTick": 8784.0,
+      "OverallEfficiency": 1.4887393720690418,
+      "OverallHeatMultiplier": 2.0,
+      "FunctionalBlocks": 12,
+      "TotalInteriorBlocks": 32,
+      "SparsityPenaltyMultiplier": 0.85355339059327373
+    }
+  }
+}
