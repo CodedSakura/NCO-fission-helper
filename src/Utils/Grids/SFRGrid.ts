@@ -182,7 +182,7 @@ export class SFRGrid {
     this.grid.forEach((v, y) => v.forEach((v, z) => v.forEach((tile, x) => {
       if (tile.tile.type !== "sink") return;
       const neighbours = tile.tile.getNeighbours(this.grid);
-      tile.tile.data.ruleSet.forEach(rule => {
+      tile.tile.data.ruleSet.rules.forEach(rule => {
         const offsets: Position[] = [];
         neighbours.forEach(nCell => {
           switch (rule.relatedComp) {

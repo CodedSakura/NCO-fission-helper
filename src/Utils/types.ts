@@ -17,9 +17,13 @@ interface NonAxialSink extends GenericSinkRule {
 }
 
 export type SinkRule = AxialSink | NonAxialSink;
+export type SinkRuleSet = {
+  rules: SinkRule[]
+  var: "||"|"&&"
+}
 
 export interface Sink {
-  ruleSet: SinkRule[]
+  ruleSet: SinkRuleSet
   cooling: number
   name: string
 }

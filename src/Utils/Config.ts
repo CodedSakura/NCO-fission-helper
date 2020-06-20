@@ -1,5 +1,66 @@
-import {Blade, Coil, CoilRule, FissionReactorConfig, Fuel, Moderator, NeutronSource, Reflector, Shield, Sink, SinkRule, Steam, TurbineConfig} from "./types";
+import {
+  Blade,
+  Coil,
+  CoilRule,
+  FissionReactorConfig,
+  Fuel,
+  Moderator,
+  NeutronSource,
+  Reflector,
+  Shield,
+  Sink,
+  SinkRule,
+  SinkRuleSet,
+  Steam,
+  TurbineConfig
+} from "./types";
 import {dataMap} from "./dataMap";
+
+const numberMap = {
+  "zero": 0,
+  "one": 1,
+  "two": 2,
+  "three": 3,
+  "four": 4,
+  "five": 5,
+  "six": 6,
+}
+function parseSinkRule(input: string): SinkRuleSet {
+  const out: SinkRuleSet = {
+    rules: [],
+    var: input.indexOf("||") < 0 ? "&&" : "||",
+  };
+  out.rules = input.split(out.var).map(v => {
+    const o: Partial<SinkRule> = {
+      requireExact: v.includes("exactly"),
+      axial: v.includes("axial")
+    }
+    v.trim().split(" ").forEach(v => {
+      if (v === "exactly" || v === "axial") return;
+      if (numberMap.hasOwnProperty(v)) {
+        // @ts-ignore
+        o.neededCount = numberMap[v];
+        return;
+      }
+      if (v === "sink" || v === "sinks") return;
+      if (v === "casing" || v === "casings") o.relatedComp = "wall";
+      else if (v === "cell" || v === "cells") o.relatedComp = "cell";
+      else if (v === "moderator" || v === "moderators") o.relatedComp = "moderator";
+      else if (v === "reflector" || v === "reflectors") o.relatedComp = "reflector";
+      else o.relatedComp = v;
+    });
+    return o as SinkRule;
+  });
+  /*
+        exactly one water sink && two lead sinks
+        exactly one moderator && one casing
+        two axial lapis sinks
+        two cells
+        two axial reflectors
+        one cell && one moderator
+  */
+  return out;
+}
 
 export class Config {
   static defaultSinkRules: {[x: string]: SinkRule[]} = {
@@ -62,11 +123,11 @@ export class Config {
   fissionReactor: FissionReactorConfig;
   turbine: TurbineConfig;
 
-  constructor(text: string, dataMapVersion: string, _dataMap?: any, customSinkRules: {[x: string]: SinkRule[]} = Config.defaultSinkRules) {
+  constructor(text: string, dataMapVersion: string, _dataMap?: any) {
     if (dataMapVersion !== "custom" && !(dataMapVersion in dataMap))
       throw new Error("unknown dataMap");
     const dm = _dataMap ? _dataMap : dataMap[dataMapVersion];
-    const {fissionReactor, turbine} = this.populateConfig(this.parseRawConfig(text), customSinkRules, dm);
+    const {fissionReactor, turbine} = this.populateConfig(this.parseRawConfig(text), dm);
     this.fissionReactor = fissionReactor;
     this.turbine = turbine;
   }
@@ -140,13 +201,13 @@ export class Config {
     return out;
   }
 
-  private populateConfig(rawConf: any, sinkRules: {[x: string]: SinkRule[]}, dm: any) {
+  private populateConfig(rawConf: any, dm: any) {
     if (!this.isValidOverhaul(rawConf)) throw new Error("Config is not Overhaul!");
 
     dm.fission.components.sink.forEach((v: string, i: number) => {
       this.sinks.push({
         name: v,
-        ruleSet: sinkRules[v],
+        ruleSet: parseSinkRule(rawConf["fission"][dm.configs.fission.sinkRule][i]),
         cooling: rawConf["fission"][dm.configs.fission.sinkCooling][i],
       });
     });

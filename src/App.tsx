@@ -22,12 +22,13 @@ interface State {
 class App extends React.Component<{}, State> {
   state: State = {
     reactor: undefined,
-    overlay: true
+    overlay: false
   }
 
   componentDidMount() {
     fetch("./nuclearcraft_default.cfg").then(r => r.text()).then(t => {
       const cfg = new Config(t, "0.0.1");
+      console.log(cfg);
       const r = getReactorFromHellrageConfig(sampleC, cfg);
       // console.log(JSON.stringify(r.export()));
       this.setState({reactor: r});
