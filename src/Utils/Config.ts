@@ -51,52 +51,10 @@ function parseSinkRule(input: string): SinkRuleSet {
     });
     return o as SinkRule;
   });
-  /*
-        exactly one water sink && two lead sinks
-        exactly one moderator && one casing
-        two axial lapis sinks
-        two cells
-        two axial reflectors
-        one cell && one moderator
-  */
   return out;
 }
 
 export class Config {
-  static defaultSinkRules: {[x: string]: SinkRule[]} = {
-    "water": [{axial: false, neededCount: 1, requireExact: false, relatedComp: "cell"}],
-    "iron": [{axial: false, neededCount: 1, requireExact: false, relatedComp: "moderator"}],
-    "redstone": [{axial: false, neededCount: 1, requireExact: false, relatedComp: "cell"}, {axial: false, neededCount: 1, requireExact: false, relatedComp: "moderator"}],
-    "quartz": [{axial: false, neededCount: 1, requireExact: false, relatedComp: "redstone"}],
-    "obsidian": [{axial: true, neededCount: 2, requireExact: false, relatedComp: "glowstone"}],
-    "nether_brick": [{axial: false, neededCount: 1, requireExact: false, relatedComp: "obsidian"}],
-    "glowstone": [{axial: false, neededCount: 2, requireExact: false, relatedComp: "moderator"}],
-    "lapis": [{axial: false, neededCount: 1, requireExact: false, relatedComp: "cell"}, {axial: false, neededCount: 1, requireExact: false, relatedComp: "wall"}],
-    "gold": [{axial: false, neededCount: 2, requireExact: true, relatedComp: "iron"}],
-    "prismarine": [{axial: false, neededCount: 2, requireExact: false, relatedComp: "water"}],
-    "slime": [{axial: false, neededCount: 1, requireExact: true, relatedComp: "water"}, {axial: false, neededCount: 2, requireExact: false, relatedComp: "lead"}],
-    "end_stone": [{axial: false, neededCount: 1, requireExact: false, relatedComp: "reflector"}],
-    "purpur": [{axial: false, neededCount: 1, requireExact: false, relatedComp: "iron"}, {axial: false, neededCount: 1, requireExact: false, relatedComp: "R"}],
-    "diamond": [{axial: false, neededCount: 1, requireExact: false, relatedComp: "gold"}, {axial: false, neededCount: 1, requireExact: false, relatedComp: "cell"}],
-    "emerald": [{axial: false, neededCount: 1, requireExact: false, relatedComp: "prismarine"}, {axial: false, neededCount: 1, requireExact: false, relatedComp: "moderator"}],
-    "copper": [{axial: false, neededCount: 1, requireExact: false, relatedComp: "water"}],
-    "tin": [{axial: true, neededCount: 2, requireExact: false, relatedComp: "lapis"}],
-    "lead": [{axial: false, neededCount: 1, requireExact: false, relatedComp: "iron"}],
-    "boron": [{axial: false, neededCount: 1, requireExact: true, relatedComp: "quartz"}, {axial: false, neededCount: 1, requireExact: false, relatedComp: "wall"}],
-    "lithium": [{axial: true, neededCount: 2, requireExact: true, relatedComp: "lead"}, {axial: false, neededCount: 1, requireExact: false, relatedComp: "wall"}],
-    "magnesium": [{axial: false, neededCount: 1, requireExact: true, relatedComp: "moderator"}, {axial: false, neededCount: 1, requireExact: false, relatedComp: "wall"}],
-    "manganese": [{axial: false, neededCount: 2, requireExact: false, relatedComp: "cell"}],
-    "aluminum": [{axial: false, neededCount: 1, requireExact: false, relatedComp: "quartz"}, {axial: false, neededCount: 1, requireExact: false, relatedComp: "lapis"}],
-    "silver": [{axial: false, neededCount: 2, requireExact: false, relatedComp: "glowstone"}, {axial: false, neededCount: 1, requireExact: false, relatedComp: "tin"}],
-    "fluorite": [{axial: false, neededCount: 1, requireExact: false, relatedComp: "gold"}, {axial: false, neededCount: 1, requireExact: false, relatedComp: "prismarine"}],
-    "villiaumite": [{axial: false, neededCount: 1, requireExact: false, relatedComp: "end_stone"}, {axial: false, neededCount: 1, requireExact: false, relatedComp: "redstone"}],
-    "carobbiite": [{axial: false, neededCount: 1, requireExact: false, relatedComp: "copper"}, {axial: false, neededCount: 1, requireExact: false, relatedComp: "end_stone"}],
-    "arsenic": [{axial: true, neededCount: 2, requireExact: false, relatedComp: "reflector"}],
-    "liquid_nitrogen": [{axial: false, neededCount: 2, requireExact: false, relatedComp: "copper"}, {axial: false, neededCount: 1, requireExact: false, relatedComp: "purpur"}],
-    "liquid_helium": [{axial: false, neededCount: 2, requireExact: true, relatedComp: "redstone"}],
-    "enderium": [{axial: false, neededCount: 3, requireExact: false, relatedComp: "moderator"}],
-    "cryotheum": [{axial: false, neededCount: 3, requireExact: false, relatedComp: "cell"}]
-  };
   static defaultCoilRules: {[x: string]: CoilRule[]} = {
     "magnesium": [{relatedComp: "bearing", neededCount: 1}],
     "beryllium": [{relatedComp: "magnesium", neededCount: 1}],
