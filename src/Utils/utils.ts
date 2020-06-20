@@ -9,3 +9,7 @@ export const classMap = (...classes: (any)[]): string|undefined => {
 export function getScrollbarWidth() {
   return window.innerWidth - document.documentElement.clientWidth;
 }
+
+export function getAsset(publicPath: string): string {
+  return process.env.PUBLIC_URL + "/Assets" + (publicPath.startsWith("/") ? publicPath : `/${publicPath}`);
+}

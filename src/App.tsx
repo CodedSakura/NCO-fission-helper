@@ -11,6 +11,7 @@ import BurgerMenu from "./Components/BurgerMenu";
 import {dataMap} from "./Utils/dataMap";
 import DarkenedBackground from "./Components/DarkenedBackground";
 import {overlayClosedEvent, overlayCloseInvokeEvent, overlayOpenInvokeEvent} from "./Utils/events";
+import {getAsset} from "./Utils/utils";
 
 
 interface State {
@@ -70,7 +71,7 @@ class App extends React.Component<{}, State> {
           <div className="block_picker">
             {
               dataMap["0.0.1"].fission.components.sink.map((v: string) =>
-                <img key={v} src={require(`./Assets/fission/sink/${v}.png`)} alt={v} className={"crisp"}/>)
+                <img key={v} src={getAsset(`/fission/sink/${v}.png`)} alt={v} className={"crisp"}/>)
             }
           </div>
           <div className="stats">stats</div>

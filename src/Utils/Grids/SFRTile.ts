@@ -1,6 +1,7 @@
 import {Position, Fuel, NeutronSource} from "../types";
 import * as types from "../types";
 import {Config} from "../Config";
+import {getAsset} from "../utils";
 
 export class SFRTile {
   readonly tile: SFRTile.Tile;
@@ -30,7 +31,7 @@ export class SFRTile {
         this.tile = {
           ...filler,
           type: "cell",
-          asset: require("../../Assets/fission/cell.png"),
+          asset: getAsset("/fission/cell.png"),
 
           priming: _priming,
           primed: fuel.selfPriming,
@@ -52,7 +53,7 @@ export class SFRTile {
         this.tile = {
           ...filler,
           type: "moderator",
-          asset: require(`../../Assets/fission/moderator/${moderator.name}.png`),
+          asset: getAsset(`/fission/moderator/${moderator.name}.png`),
 
           active: false,
           data: moderator
@@ -64,7 +65,7 @@ export class SFRTile {
         this.tile = {
           ...filler,
           type: "sink",
-          asset: require(`../../Assets/fission/sink/${sink.name}.png`),
+          asset: getAsset(`/fission/sink/${sink.name}.png`),
 
           data: sink,
           cluster: undefined
@@ -76,7 +77,7 @@ export class SFRTile {
         this.tile = {
           ...filler,
           type: "reflector",
-          asset: require(`../../Assets/fission/reflector/${reflector.name}.png`),
+          asset: getAsset(`/fission/reflector/${reflector.name}.png`),
 
           data: reflector
         };
@@ -85,7 +86,7 @@ export class SFRTile {
         this.tile = {
           ...filler,
           type: "irradiator",
-          asset: require(`../../Assets/fission/irradiator.png`),
+          asset: getAsset(`/fission/irradiator.png`),
 
           flux: 0
         };
@@ -96,7 +97,7 @@ export class SFRTile {
         this.tile = {
           ...filler,
           type: "shield",
-          asset: require(`../../Assets/fission/shield/${shield.name}.png`),
+          asset: getAsset(`/fission/shield/${shield.name}.png`),
 
           cluster: undefined,
           open: true,
@@ -107,7 +108,7 @@ export class SFRTile {
         this.tile = {
           ...filler,
           type: type as "air"|"wall",
-          asset: require(type === "wall" ? "../../Assets/fission/wall.png" : "../../Assets/air.png")
+          asset: getAsset(type === "wall" ? "/fission/wall.png" : "/air.png")
         };
     }
   }
