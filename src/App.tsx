@@ -51,7 +51,18 @@ class App extends React.Component<{}, State> {
       <div className="main_container">
         <div className="sidebar">
           <div className="title">
-            <BurgerMenu/>
+            <BurgerMenu>
+              <div className="panel__link">Selection A</div>
+              <div className="panel__link panel__link--active">Selection B</div>
+              <div className="panel__link">Selection C</div>
+              <div className="panel__separator"/>
+              <div className="panel__link">Settings</div>
+              <div className="panel__footer">
+                Made by CodedSakura, 2020<br/>
+                <a href={`https://github.com/CodedSakura/NCO-fission-helper/commit/${process.env.REACT_APP_GIT_SHA}`}>{process.env.REACT_APP_GIT_SHA}</a> /
+                {" "}<a href="https://github.com/CodedSakura/NCO-fission-helper">{"???"}</a><br/>
+              </div>
+            </BurgerMenu>
             NAME
           </div>
           <div className="dim_select">
