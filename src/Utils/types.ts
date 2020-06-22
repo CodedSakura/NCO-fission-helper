@@ -58,7 +58,11 @@ export interface NeutronSource {
 }
 
 export type Position = [number, number, number];
-
+export interface Dimensions {
+  width: number
+  height: number
+  depth: number
+}
 
 export interface GridProblem {
   pos: Position

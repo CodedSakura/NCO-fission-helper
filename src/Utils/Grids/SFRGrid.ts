@@ -1,13 +1,7 @@
 import {dataMap, latestDM} from "../dataMap";
-import {FissionReactorExport, GridProblem, Position} from "../types";
+import {Dimensions, FissionReactorExport, GridProblem, Position} from "../types";
 import {Config} from "../Config";
 import {SFRTile} from "./SFRTile";
-
-interface Dimensions {
-  width: number
-  height: number
-  depth: number
-}
 
 export class SFRGrid {
   grid: SFRTile[][][] = [];

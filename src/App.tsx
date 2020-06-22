@@ -8,34 +8,48 @@ import sampleC from "./Utils/parsers/ZAHEB-248_23_x_23_x_23.json";
 import FissionReactor from "./Components/FissionReactor";
 import {SFRGrid} from "./Utils/Grids/SFRGrid";
 import BurgerMenu from "./Components/BurgerMenu";
-import {dataMap} from "./Utils/dataMap";
+import {dataMap, latestDM} from "./Utils/dataMap";
 import DarkenedBackground from "./Components/DarkenedBackground";
 import {overlayClosedEvent, overlayCloseInvokeEvent, overlayOpenInvokeEvent} from "./Utils/events";
 import {getAsset} from "./Utils/utils";
+import {Dimensions} from "./Utils/types";
 
 
 interface State {
   reactor: SFRGrid|undefined
   overlay: boolean
+  displayScale: number
+  dimensions: Dimensions
 }
 
 class App extends React.Component<{}, State> {
   state: State = {
     reactor: undefined,
-    overlay: false
+    overlay: false,
+    displayScale: 2,
+    dimensions: {width: 7, depth: 7, height: 7},
   }
+  config: Config|undefined;
 
   componentDidMount() {
     fetch("./nuclearcraft_default.cfg").then(r => r.text()).then(t => {
-      const cfg = new Config(t, "0.0.1");
-      console.log(cfg);
-      const r = getReactorFromHellrageConfig(sampleC, cfg);
-      this.setState({reactor: r});
+      this.config = new Config(t, "0.0.1");
+      // console.log(cfg);
+      const r = getReactorFromHellrageConfig(sampleC, this.config);
+      this.setActiveSFR(r);
     });
 
     document.addEventListener(overlayOpenInvokeEvent, this.openOverlay);
     document.addEventListener(overlayCloseInvokeEvent, this.closeOverlay);
   }
+
+  setActiveSFR = (r: SFRGrid) => {
+    this.setState({reactor: r, dimensions: {height: r.grid.length, depth: r.grid[0].length, width: r.grid[0][0].length}});
+  };
+  createSFR = () => {
+    const r = new SFRGrid(this.config!, this.state.dimensions, latestDM.version);
+    this.setState({reactor: r});
+  };
 
   openOverlay = () => {
     this.setState({overlay: true});
@@ -65,35 +79,38 @@ class App extends React.Component<{}, State> {
             NAME
           </div>
           <div className="flex__cols flex--even">
-            <button>Import</button>
-            <button>Export</button>
+            <button>Import [WIP]</button>
+            <button>Export [NYI]</button>
           </div>
           <div>
             <div className="flex__cols flex--even">
               Scale:
               <div className="scale_select">
-                <button>-</button>
-                <input type="text" value={2} readOnly tabIndex={-1}/>
-                <button>+</button>
+                <button onClick={() => this.setState(v => ({displayScale: (v.displayScale - 0.5) || 0.5}))}>-</button>
+                <input type="text" value={this.state.displayScale} readOnly tabIndex={-1}/>
+                <button onClick={() => this.setState(v => ({displayScale: v.displayScale + 0.5}))}>+</button>
               </div>
             </div>
             <div className="flex__cols flex--even">
-              <button>Display options</button>
+              <button>Display options [NYI]</button>
             </div>
           </div>
           <div className="dim_select">
             <div>
-              <input type="number"/>
+              <input type="number" min={1} value={this.state.dimensions.width}
+                     onChange={({target: {value}}) => this.setState(s => ({dimensions: {...s.dimensions, width: parseInt(value)}}))}/>
               &times;
-              <input type="number"/>
+              <input type="number" min={1} value={this.state.dimensions.height}
+                     onChange={({target: {value}}) => this.setState(s => ({dimensions: {...s.dimensions, height: parseInt(value)}}))}/>
               &times;
-              <input type="number"/>
+              <input type="number" min={1} value={this.state.dimensions.depth}
+                     onChange={({target: {value}}) => this.setState(s => ({dimensions: {...s.dimensions, depth: parseInt(value)}}))}/>
             </div>
             <div>
-              <button>Reset</button>
+              <button onClick={() => {if (window.confirm("Really reset?")) this.createSFR()}}>Reset</button>
             </div>
             <div>
-              <button>Manage symmetries</button>
+              <button>Manage symmetries [NYI]</button>
             </div>
           </div>
           <div className="block_picker">
@@ -102,21 +119,21 @@ class App extends React.Component<{}, State> {
                 <img key={v} src={getAsset(`/fission/sink/${v}.png`)} alt={v} className={"crisp"}/>)
             }
           </div>
-          <div className="stats">stats</div>
+          <div className="stats">stats [NYI]</div>
         </div>
         <div className="grid_container">
           <div className="navigation">
-            <button className="navigation--active">Solid Fusion Reactors</button>
-            <button>Molten Salt Reactors [WIP]</button>
-            <button>Turbines [WIP]</button>
-            <button>Linear Accelerators [WIP]</button>
+            <button className="navigation--active">Solid Fusion Reactors [WIP]</button>
+            <button>Molten Salt Reactors [NYI]</button>
+            <button>Turbines [NYI]</button>
+            <button>Linear Accelerators [NYI]</button>
           </div>
           <div className="navigation">
             <button className="navigation--active">Unnamed Reactor</button>
-            <button>+</button>
+            <button>+ [NYI]</button>
           </div>
           <div className="grid_base">
-            {this.state.reactor ? <FissionReactor reactor={this.state.reactor}/> : undefined}
+            {this.state.reactor ? <FissionReactor reactor={this.state.reactor} scale={this.state.displayScale}/> : undefined}
           </div>
         </div>
       </div>
