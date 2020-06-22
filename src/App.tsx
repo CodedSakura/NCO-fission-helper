@@ -30,7 +30,6 @@ class App extends React.Component<{}, State> {
       const cfg = new Config(t, "0.0.1");
       console.log(cfg);
       const r = getReactorFromHellrageConfig(sampleC, cfg);
-      // console.log(JSON.stringify(r.export()));
       this.setState({reactor: r});
     });
 
@@ -59,11 +58,28 @@ class App extends React.Component<{}, State> {
               <div className="panel__link">Settings</div>
               <div className="panel__footer">
                 Made by CodedSakura, 2020<br/>
-                <a href={`https://github.com/CodedSakura/NCO-fission-helper/commit/${process.env.REACT_APP_GIT_SHA}`}>{process.env.REACT_APP_GIT_SHA}</a> /
-                {" "}<a href="https://github.com/CodedSakura/NCO-fission-helper">{"???"}</a><br/>
+                <a tabIndex={-1} href={`https://github.com/CodedSakura/NCO-fission-helper/commit/${process.env.REACT_APP_GIT_SHA}`}>{process.env.REACT_APP_GIT_SHA}</a> /
+                {" "}<a tabIndex={-1} href="https://github.com/CodedSakura/NCO-fission-helper">{"???"}</a><br/>
               </div>
             </BurgerMenu>
             NAME
+          </div>
+          <div className="flex__cols flex--even">
+            <button>Import</button>
+            <button>Export</button>
+          </div>
+          <div>
+            <div className="flex__cols flex--even">
+              Scale:
+              <div className="scale_select">
+                <button>-</button>
+                <input type="text" value={2} readOnly tabIndex={-1}/>
+                <button>+</button>
+              </div>
+            </div>
+            <div className="flex__cols flex--even">
+              <button>Display options</button>
+            </div>
           </div>
           <div className="dim_select">
             <div>
@@ -77,7 +93,7 @@ class App extends React.Component<{}, State> {
               <button>Reset</button>
             </div>
             <div>
-              <a href="/">Manage symmetries</a>
+              <button>Manage symmetries</button>
             </div>
           </div>
           <div className="block_picker">
@@ -90,14 +106,14 @@ class App extends React.Component<{}, State> {
         </div>
         <div className="grid_container">
           <div className="navigation">
-            <a href="/" className="navigation--active">Solid Fusion Reactors</a>
-            <a href="/">Molten Salt Reactors [WIP]</a>
-            <a href="/">Turbines [WIP]</a>
-            <a href="/">Linear Accelerators [WIP]</a>
+            <button className="navigation--active">Solid Fusion Reactors</button>
+            <button>Molten Salt Reactors [WIP]</button>
+            <button>Turbines [WIP]</button>
+            <button>Linear Accelerators [WIP]</button>
           </div>
           <div className="navigation">
-            <a href="/" className="navigation--active">Unnamed Reactor</a>
-            <a href="/">+</a>
+            <button className="navigation--active">Unnamed Reactor</button>
+            <button>+</button>
           </div>
           <div className="grid_base">
             {this.state.reactor ? <FissionReactor reactor={this.state.reactor}/> : undefined}

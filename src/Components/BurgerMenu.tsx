@@ -20,7 +20,8 @@ class BurgerMenu extends Component {
 
   render() {
     return <div>
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="-5 -5 18 18" width="36" height="36" className="burger_menu__icon" onClick={this.openMenu}>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="-5 -5 18 18" width="36" height="36" className="burger_menu__icon"
+           onClick={this.openMenu} tabIndex={0}>
         <rect y="2" width="50%" height="1"/>
         <rect y="4.5" width="50%" height="1"/>
         <rect y="7" width="50%" height="1"/>
