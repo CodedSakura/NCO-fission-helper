@@ -120,3 +120,12 @@
     display: block;
   }
 }
+
+.modal {
+  &__import {
+    width: 300px;
+    input[type="file"] ~ button {
+      margin-top: 4px;
+    }
+  }
+}

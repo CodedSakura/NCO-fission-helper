@@ -1,0 +1,26 @@
+.modal {
+  position: fixed;
+  top: 0;
+  z-index: 1200;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+
+  &__cont {
+    margin: 20px;
+    border-radius: 5px;
+    background-color: #444d;
+  }
+
+  &__head {
+    padding: 8px;
+    border-bottom: 1px solid #777b;
+  }
+  &__body {
+    padding: 8px;
+  }
+  &__footer {
+    border-top: 1px solid #777b;
+    padding: 8px;
+  }
+}
