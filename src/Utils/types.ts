@@ -22,23 +22,24 @@ export type SinkRuleSet = {
   var: "||"|"&&"
 }
 
-export interface Sink {
+export interface GenericComponent {
+  name: string
+  asset: string
+}
+
+export interface Sink extends GenericComponent {
   ruleSet: SinkRuleSet
   cooling: number
-  name: string
 }
-export interface Moderator {
-  name: string
+export interface Moderator extends GenericComponent {
   fluxFactor: number
   efficiency: number
 }
-export interface Shield {
-  name: string
+export interface Shield extends GenericComponent {
   heatPerFlux: number
   efficiency: number
 }
-export interface Reflector {
-  name: string
+export interface Reflector extends GenericComponent {
   reflectivity: number
   efficiency: number
 }
@@ -69,8 +70,7 @@ export interface GridProblem {
   message: string
 }
 
-interface GenericBlade {
-  name: string
+interface GenericBlade extends GenericComponent {
   stator: boolean
   expansion: number
   efficiency: number
@@ -87,8 +87,7 @@ interface StandardBlade extends GenericBlade {
 export interface CoilRule extends GenericPlacementRule {}
 
 export type Blade = StatorBlade | StandardBlade;
-export interface Coil {
-  name: string
+export interface Coil extends GenericComponent {
   conductivity: number
   ruleSet: GenericPlacementRule[]
 }

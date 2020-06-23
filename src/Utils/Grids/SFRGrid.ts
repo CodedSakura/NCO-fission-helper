@@ -2,22 +2,36 @@ import {dataMap, latestDM} from "../dataMap";
 import {Dimensions, FissionReactorExport, GridProblem, Position} from "../types";
 import {Config} from "../Config";
 import {SFRTile} from "./SFRTile";
+import {GenericGrid, GridType, PickerData} from "./GenericGrid";
 
-export class SFRGrid {
+export class SFRGrid extends GenericGrid<GridType.SFR> {
   grid: SFRTile[][][] = [];
   config: Config;
   dataMap: any = latestDM;
+  name = "Unnamed Reactor";
+
+  pickerFiles: PickerData[];
+  activeFuel: string|undefined;
 
   constructor(config: Config, size: Dimensions, dataMapVersion: string, _dataMap?: any) {
+    super();
     this.config = config;
-    if (!dataMapVersion) return;
-    if (dataMapVersion !== "custom" && !(dataMapVersion in dataMap))
+    if (!dataMapVersion || (dataMapVersion !== "custom" && !(dataMapVersion in dataMap)))
       throw new Error("unknown dataMap");
     this.dataMap = _dataMap ? _dataMap : dataMap[dataMapVersion];
-    this.setSize(size);
+    this.reset(size);
+    this.pickerFiles = [
+      {filepath: config.air.asset, type: "air", tile: "air"},
+      {filepath: config.fuelCell.asset, type: "cell", tile: "cell"},
+      ...config.moderators.map(v => ({filepath: v.asset, type: "moderator", tile: v.name})),
+      ...config.sinks.map(v => ({filepath: v.asset, type: "sink", tile: v.name})),
+      ...config.reflectors.map(v => ({filepath: v.asset, type: "reflector", tile: v.name})),
+      ...config.shields.map(v => ({filepath: v.asset, type: "shield", tile: v.name})),
+      {filepath: config.fissionWall.asset, type: "wall", tile: "wall"},
+    ]
   }
 
-  setSize({width, depth, height}: Dimensions) {
+  reset({width, depth, height}: Dimensions) {
     if ([width, depth, height].some(v => v < this.config.fissionReactor.minSize || v > this.config.fissionReactor.maxSize))
       throw new Error("reactor too small/large");
     this.grid = [];
@@ -41,12 +55,14 @@ export class SFRGrid {
 
     this.setGridTile(pos, new SFRTile(pos, this.config, type, tile));
   }
-  setCell(pos: Position, fuelName: string, priming: string) {
+  setFuelCell(pos: Position, fuelName: string, priming: string) {
     if (this.isOutsideGrid(pos)) throw new Error("coordinates outside grid");
     const {neutronSourceOrder} = this.dataMap.fission;
 
     const fuel = this.config.fuels.find(v => v.name === fuelName);
     if (!fuel) throw new Error(`unknown fuel ${fuelName}`);
+
+    if (priming === "self") priming = "none";
 
     if (neutronSourceOrder.indexOf(priming) < 0)
       throw new Error(`no such priming method '${priming}'`);
@@ -54,6 +70,7 @@ export class SFRGrid {
     this.setGridTile(pos, new SFRTile(pos, this.config, "cell", fuelName, priming));
   }
 
+  //<editor-fold desc="Shields">
   shieldsToggle() {
     this.grid.forEach(v => v.forEach(v => v.forEach(v => {
       if (v.tile.type === "shield") {
@@ -75,6 +92,7 @@ export class SFRGrid {
       }
     })));
   }
+  //</editor-fold>
 
   private isOutsideGrid([x, y, z]: Position): boolean {
     return x < 0 || y < 0 || z < 0 || y >= this.grid.length || z >= this.grid[y].length || x >= this.grid[y][z].length;
@@ -89,8 +107,7 @@ export class SFRGrid {
     this.grid[pos[1]][pos[2]][pos[0]] = val;
   }
 
-  private analyzeFuelCell(cell: SFRTile.FuelCell, fuelCells: SFRTile.FuelCell[],
-                          moderators: SFRTile.Moderator[]) {
+  private analyzeFuelCell(cell: SFRTile.FuelCell, fuelCells: SFRTile.FuelCell[], moderators: SFRTile.Moderator[]) {
     cell.getNeighbours(this.grid).filter(t => t.tile.type === "moderator" || t.tile.type === "shield").forEach(nb => {
       const offset = cell.pos.map((v, i) => nb.tile.pos[i] - v) as Position;
       if (cell.checkedModerators.some(p => p.every((v, i) => v === offset[i])))
@@ -224,6 +241,23 @@ export class SFRGrid {
     }
   }
 
+  getStats(): string[] {
+    return [];
+  }
+
+  getCellStats(pos: Position): string[] {
+    return [];
+  }
+
+  pickerSelection(n: number) {
+  }
+
+  changeTile(pos: Position, n: number, symmetries: any) {
+  }
+
+  setData(name: string, data: string) {
+  }
+
   static import(data: number[][][], config: Config, dataMapVersion: string, _dataMap?: any) {
     if (dataMapVersion !== "custom" && !(dataMapVersion in dataMap))
       throw new Error("unknown dataMap");
@@ -242,7 +276,7 @@ export class SFRGrid {
             const fuelName = dm.fuel.fuelTypes[fuelType][bytes & ((1 << dm.fuel.fuelBitCount) - 1)];
             bytes >>= dm.fuel.fuelBitCount;
             const priming = dm.fission.neutronSourceOrder[bytes];
-            r.setCell([x, y, z], fuelName, priming);
+            r.setFuelCell([x, y, z], fuelName, priming);
           } else {
             r.setTile([x, y, z], type, dm.fission.components[type][bytes]);
           }

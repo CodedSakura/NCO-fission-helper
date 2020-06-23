@@ -87,7 +87,7 @@ export function getReactorFromHellrageConfig(data: object, config: Config) {
     const source = v.split(";")[2].toLowerCase().replace("-", "_");
 
     relevantCells.forEach(v => {
-      r.setCell([v.X-1, v.Y-1, v.Z-1], fuelName, source);
+      r.setFuelCell([v.X-1, v.Y-1, v.Z-1], fuelName, source);
     });
   });
 

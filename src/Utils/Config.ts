@@ -3,7 +3,7 @@ import {
   Coil,
   CoilRule,
   FissionReactorConfig,
-  Fuel,
+  Fuel, GenericComponent,
   Moderator,
   NeutronSource,
   Reflector,
@@ -15,6 +15,7 @@ import {
   TurbineConfig
 } from "./types";
 import {dataMap} from "./dataMap";
+import {getAsset} from "./utils";
 
 const numberMap = {
   "zero": 0,
@@ -63,6 +64,8 @@ export class Config {
     "copper": [{relatedComp: "beryllium", neededCount: 1}],
     "silver": [{relatedComp: "gold", neededCount: 1}, {relatedComp: "copper", neededCount: 1}],
   };
+  
+  air: GenericComponent = {name: "air", asset: getAsset("/air.png")};
 
   sinks: Sink[] = [];
   moderators: Moderator[] = [];
@@ -73,6 +76,9 @@ export class Config {
     {efficiency: 0, name: "none"},
     {efficiency: 1, name: "self"}
   ];
+  fissionWall: GenericComponent = {name: "wall", asset: getAsset("/fission/wall.png")};
+  irradiator: GenericComponent = {name: "irradiator", asset: getAsset("/fission/irradiator.png")};
+  fuelCell: GenericComponent = {name: "cell", asset: getAsset("/fission/cell.png")};
 
   blades: Blade[] = [];
   coils: Coil[] = [];
@@ -165,6 +171,7 @@ export class Config {
     dm.fission.components.sink.forEach((v: string, i: number) => {
       this.sinks.push({
         name: v,
+        asset: getAsset(`/fission/sink/${v}.png`),
         ruleSet: parseSinkRule(rawConf["fission"][dm.configs.fission.sinkRule][i]),
         cooling: rawConf["fission"][dm.configs.fission.sinkCooling][i],
       });
@@ -172,6 +179,7 @@ export class Config {
     dm.fission.components.moderator.forEach((v: string, i: number) => {
       this.moderators.push({
         name: v,
+        asset: getAsset(`/fission/moderator/${v}.png`),
         efficiency: rawConf["fission"][dm.configs.fission.moderatorEfficiency][i],
         fluxFactor: rawConf["fission"][dm.configs.fission.moderatorFluxFactor][i],
       });
@@ -179,6 +187,7 @@ export class Config {
     dm.fission.components.shield.forEach((v: string, i: number) => {
       this.shields.push({
         name: v,
+        asset: getAsset(`/fission/shield/${v}.png`),
         efficiency: rawConf["fission"][dm.configs.fission.shieldEfficiency][i],
         heatPerFlux: rawConf["fission"][dm.configs.fission.shieldHeatPerFlux][i],
       });
@@ -186,6 +195,7 @@ export class Config {
     dm.fission.components.reflector.forEach((v: string, i: number) => {
       this.reflectors.push({
         name: v,
+        asset: getAsset(`/fission/reflector/${v}.png`),
         efficiency: rawConf["fission"][dm.configs.fission.reflectorEfficiency][i],
         reflectivity: rawConf["fission"][dm.configs.fission.reflectorReflectivity][i],
       });
@@ -214,6 +224,7 @@ export class Config {
     dm.turbine.blade.bladeOrder.forEach((v: string, i: number) => {
       this.blades.push({
         name: v,
+        asset: getAsset(`/turbine/rotor_blade/${v}.png`),
         efficiency: rawConf["turbine"][dm.configs.turbine.bladeEfficiency][i],
         expansion: rawConf["turbine"][dm.configs.turbine.bladeExpansion][i],
         stator: false
@@ -221,6 +232,7 @@ export class Config {
     });
     this.blades.push({
       name: "stator",
+      asset: getAsset(`/turbine/rotor_blade/stator.png`),
       stator: true,
       efficiency: 0,
       expansion: rawConf["turbine"][dm.configs.turbine.statorExpansion],
@@ -228,6 +240,7 @@ export class Config {
     dm.turbine.coil.components.coil.forEach((v: string, i: number) => {
       this.coils.push({
         name: v,
+        asset: getAsset(`/turbine/dynamo_coil/${v}.png`),
         conductivity: rawConf["turbine"][dm.configs.turbine.coilConductivity][i],
         ruleSet: Config.defaultCoilRules[v],
       });

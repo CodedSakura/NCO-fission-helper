@@ -8,12 +8,13 @@ import sampleC from "./Utils/parsers/ZAHEB-248_23_x_23_x_23.json";
 import FissionReactor from "./Components/FissionReactor";
 import {SFRGrid} from "./Utils/Grids/SFRGrid";
 import BurgerMenu from "./Components/BurgerMenu";
-import {dataMap, latestDM} from "./Utils/dataMap";
+import {latestDM} from "./Utils/dataMap";
 import DarkenedBackground from "./Components/DarkenedBackground";
 import {overlayClosedEvent, overlayCloseInvokeEvent, overlayOpenInvokeEvent} from "./Utils/events";
-import {getAsset} from "./Utils/utils";
+import {classMap} from "./Utils/utils";
 import {Dimensions} from "./Utils/types";
 import Modal from "./Components/Modal";
+import {GenericGrid, GridType} from "./Utils/Grids/GenericGrid";
 
 enum ModalState {
   None, Import, Export, Symmetries, Display, Stats
@@ -25,7 +26,8 @@ enum ImportMode {
 
 
 interface State {
-  reactor: SFRGrid|undefined
+  grids: {[x in GridType]: GenericGrid<x>[]}
+  active: {type: GridType, index: number}
   overlay: boolean
   displayScale: number
   dimensions: Dimensions
@@ -36,7 +38,13 @@ interface State {
 
 class App extends React.Component<{}, State> {
   state: State = {
-    reactor: undefined,
+    grids: {
+      [GridType.SFR]: [], [GridType.MSR]: [], [GridType.Turbine]: []
+    },
+    active: {
+      type: GridType.SFR,
+      index: -1
+    },
     overlay: false,
     displayScale: 2,
     dimensions: {width: 7, depth: 7, height: 7},
@@ -49,9 +57,9 @@ class App extends React.Component<{}, State> {
   componentDidMount() {
     fetch("./nuclearcraft_default.cfg").then(r => r.text()).then(t => {
       this.config = new Config(t, "0.0.1");
-      // console.log(cfg);
       const r = getReactorFromHellrageConfig(sampleC, this.config);
-      this.setActiveSFR(r);
+      r.name = "Preview Reactor";
+      this.addSFR(r);
     });
 
     document.addEventListener(overlayOpenInvokeEvent, this.openOverlay);
@@ -66,6 +74,15 @@ class App extends React.Component<{}, State> {
     Array.from(this.state.importFiles).forEach(f => {
       const reader = new FileReader();
       reader.addEventListener("load", () => {
+        if (!reader.result) throw new Error(/*TODO*/);
+        if (reader.result instanceof ArrayBuffer) throw new Error(/*TODO*/);
+        try {
+          const r = getReactorFromHellrageConfig(JSON.parse(reader.result), this.config!);
+          r.name = f.name;
+          this.addSFR(r);
+        } catch (e) {
+          console.error(e);
+        }
         console.log(reader.result);
       });
       reader.addEventListener("error", e => {
@@ -77,12 +94,28 @@ class App extends React.Component<{}, State> {
     this.setState({modalState: ModalState.None});
   };
 
-  setActiveSFR = (r: SFRGrid) => {
-    this.setState({reactor: r, dimensions: {height: r.grid.length, depth: r.grid[0].length, width: r.grid[0][0].length}});
+  activeValid(): boolean {
+    const {active: {index, type}, grids} = this.state;
+    return index >= 0 && index < grids[type].length;
+  }
+
+  addSFR = (r: SFRGrid) => {
+    console.log("add");
+    this.setState(s => {
+      const {grids} = s;
+      return {
+        grids: {...grids, [GridType.SFR]: [...grids[GridType.SFR], r]},
+        active: {type: GridType.SFR, index: grids[GridType.SFR].length}
+      };
+    });
   };
-  createSFR = () => {
-    const r = new SFRGrid(this.config!, this.state.dimensions, latestDM.version);
-    this.setState({reactor: r});
+  resetSFR = () => {
+    const {grids, dimensions, active: {type, index}} = this.state;
+    if (this.activeValid()) {
+      grids[type][index].reset(dimensions);
+    } else {
+      this.addSFR(new SFRGrid(this.config!, dimensions, latestDM.version));
+    }
   };
 
   openOverlay = () => {
@@ -94,6 +127,8 @@ class App extends React.Component<{}, State> {
   };
 
   render() {
+    const {active: {index, type}, grids} = this.state;
+    const activeGrid = this.activeValid() ? grids[type][index] : null;
     return <>
       <Modal shown={this.state.modalState === ModalState.Import} onClose={() => this.setState({modalState: ModalState.None})}
              className="modal__import">
@@ -138,7 +173,7 @@ class App extends React.Component<{}, State> {
             NAME
           </div>
           <div className="flex__cols flex--even">
-            <button onClick={() => this.setState({modalState: ModalState.Import})}>Import [NYI]</button>
+            <button onClick={() => this.setState({modalState: ModalState.Import})}>Import</button>
             <button onClick={() => this.setState({modalState: ModalState.Export})}>Export [NYI]</button>
           </div>
           <div>
@@ -166,7 +201,7 @@ class App extends React.Component<{}, State> {
                      onChange={({target: {value}}) => this.setState(s => ({dimensions: {...s.dimensions, depth: parseInt(value)}}))}/>
             </div>
             <div>
-              <button onClick={() => {if (window.confirm("Really reset?")) this.createSFR()}}>Reset</button>
+              <button onClick={() => {if (window.confirm("Really reset?")) this.resetSFR()}}>Reset</button>
             </div>
             <div>
               <button>Manage symmetries [NYI]</button>
@@ -174,25 +209,32 @@ class App extends React.Component<{}, State> {
           </div>
           <div className="block_picker">
             {
-              dataMap["0.0.1"].fission.components.sink.map((v: string) =>
-                <img key={v} src={getAsset(`/fission/sink/${v}.png`)} alt={v} className={"crisp"}/>)
+              activeGrid ? activeGrid.pickerFiles.map((v, i) =>
+                <img key={i} src={v.filepath} alt={v.tile} className={"crisp"}/>) : undefined
             }
           </div>
           <div className="stats">stats [NYI]</div>
         </div>
         <div className="grid_container">
           <div className="navigation">
-            <button className="navigation--active">Solid Fusion Reactors [WIP]</button>
-            <button>Molten Salt Reactors [NYI]</button>
-            <button>Turbines [NYI]</button>
+            <button className="navigation--active">Solid Fusion Reactors ({grids[GridType.SFR].length}) [WIP]</button>
+            <button>Molten Salt Reactors ({grids[GridType.MSR].length}) [NYI]</button>
+            <button>Turbines ({grids[GridType.Turbine].length}) [NYI]</button>
             <button>Linear Accelerators [NYI]</button>
           </div>
           <div className="navigation">
-            <button className="navigation--active">Unnamed Reactor</button>
+            {grids[type].map((v, i) =>
+              <button key={i} className={classMap(i === index && "navigation--active")}
+                      onClick={() => this.setState(s => ({active: {...s.active, index: i}}))}>{v.name}</button>
+            )}
             <button>+ [NYI]</button>
           </div>
           <div className="grid_base">
-            {this.state.reactor ? <FissionReactor reactor={this.state.reactor} scale={this.state.displayScale}/> : undefined}
+            {activeGrid ? {
+              [GridType.SFR]: <FissionReactor reactor={activeGrid as SFRGrid} scale={this.state.displayScale}/>,
+              [GridType.MSR]: null,
+              [GridType.Turbine]: null,
+            }[type] : undefined}
           </div>
         </div>
       </div>
