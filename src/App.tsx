@@ -5,7 +5,7 @@ import {getReactorFromHellrageConfig} from "./Utils/parsers/HellragePlanner";
 import {Config} from "./Utils/Config";
 
 import sampleC from "./Utils/parsers/ZAHEB-248_23_x_23_x_23.json";
-import FissionReactor from "./Components/FissionReactor";
+import FissionReactor from "./Components/Grids/FissionReactor";
 import {SFRGrid} from "./Utils/Grids/SFRGrid";
 import BurgerMenu from "./Components/BurgerMenu";
 import {latestDM} from "./Utils/dataMap";

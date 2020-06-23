@@ -139,3 +139,11 @@
     }
   }
 }
+
+.layer_buttons {
+  width: 40px;
+  text-align: center;
+  > * {
+    width: 100%;
+  }
+}
