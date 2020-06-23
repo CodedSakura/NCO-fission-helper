@@ -71,6 +71,17 @@ class App extends React.Component<{}, State> {
   };
   importAction = () => {
     if (!this.state.importFiles) return;
+    if (this.state.importMode === ImportMode.Override) {
+      this.setState({
+        grids: {
+          [GridType.SFR]: [], [GridType.MSR]: [], [GridType.Turbine]: []
+        },
+        active: {
+          type: GridType.SFR,
+          index: -1
+        }
+      })
+    }
     Array.from(this.state.importFiles).forEach(f => {
       const reader = new FileReader();
       reader.addEventListener("load", () => {
@@ -173,7 +184,7 @@ class App extends React.Component<{}, State> {
             NAME
           </div>
           <div className="flex__cols flex--even">
-            <button onClick={() => this.setState({modalState: ModalState.Import})}>Import</button>
+            <button onClick={() => this.setState({modalState: ModalState.Import, importFiles: null})}>Import</button>
             <button onClick={() => this.setState({modalState: ModalState.Export})}>Export [NYI]</button>
           </div>
           <div>
