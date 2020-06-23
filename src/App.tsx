@@ -10,11 +10,12 @@ import {SFRGrid} from "./Utils/Grids/SFRGrid";
 import BurgerMenu from "./Components/BurgerMenu";
 import {latestDM} from "./Utils/dataMap";
 import DarkenedBackground from "./Components/DarkenedBackground";
-import {overlayClosedEvent, overlayCloseInvokeEvent, overlayOpenInvokeEvent} from "./Utils/events";
+import {alertInvokeEvent, overlayClosedEvent, overlayCloseInvokeEvent, overlayOpenInvokeEvent} from "./Utils/events";
 import {classMap} from "./Utils/utils";
 import {Dimensions} from "./Utils/types";
 import Modal from "./Components/Modal";
 import {GenericGrid, GridType} from "./Utils/Grids/GenericGrid";
+import Alert, {IAlert} from "./Components/Alert";
 
 enum ModalState {
   None, Import, Export, Symmetries, Display, Stats
@@ -34,6 +35,7 @@ interface State {
   modalState: ModalState
   importFiles: FileList|null
   importMode: ImportMode
+  activeAlerts: {[x: number]: JSX.Element}
 }
 
 class App extends React.Component<{}, State> {
@@ -50,9 +52,11 @@ class App extends React.Component<{}, State> {
     dimensions: {width: 7, depth: 7, height: 7},
     modalState: ModalState.None,
     importFiles: null,
-    importMode: ImportMode.Additive
+    importMode: ImportMode.Additive,
+    activeAlerts: {},
   }
   config: Config|undefined;
+  alertID: number = 0;
 
   componentDidMount() {
     fetch("./nuclearcraft_default.cfg").then(r => r.text()).then(t => {
@@ -64,6 +68,8 @@ class App extends React.Component<{}, State> {
 
     document.addEventListener(overlayOpenInvokeEvent, this.openOverlay);
     document.addEventListener(overlayCloseInvokeEvent, this.closeOverlay);
+
+    document.addEventListener(alertInvokeEvent, this.alertEvent);
   }
 
   importChange = ({target: {files}}: React.ChangeEvent<HTMLInputElement>) => {
@@ -135,6 +141,25 @@ class App extends React.Component<{}, State> {
   closeOverlay = () => {
     document.dispatchEvent(new Event(overlayClosedEvent));
     this.setState({overlay: false});
+  };
+
+  alertEvent = (e: Event) => {
+    const d = e as CustomEvent<IAlert>;
+    this.setState(s => {
+      const id = this.alertID++;
+      return {
+        activeAlerts: {
+          ...s.activeAlerts,
+          [id]: <Alert key={id} type={d.detail.type} onDeath={this.alertDeath(id)}>{d.detail.message}</Alert>
+        }
+      };
+    });
+  }
+  alertDeath = (id: number) => () => {
+    this.setState(s => {
+      delete s.activeAlerts[id];
+      return s;
+    })
   };
 
   render() {
@@ -250,6 +275,9 @@ class App extends React.Component<{}, State> {
         </div>
       </div>
       <DarkenedBackground enabled={this.state.overlay} onClick={this.closeOverlay}/>
+      <div className="alert__cont">
+        {Object.values(this.state.activeAlerts).reverse()}
+      </div>
     </>;
   }
 }
