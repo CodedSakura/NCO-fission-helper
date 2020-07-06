@@ -72,8 +72,15 @@ type HellrageConfig = {
   }
 }
 
+export class HellrageParserVersionError extends Error {}
+
 export function getReactorFromHellrageConfig(data: object, config: Config) {
   const d = data as HellrageConfig;
+
+  if (d.SaveVersion.Major !== 2) {
+    throw new HellrageParserVersionError(d.SaveVersion.Major.toString(10));
+  }
+
   const r = new SFRGrid(config, {width: d.Data.InteriorDimensions.X, height: d.Data.InteriorDimensions.Y, depth: d.Data.InteriorDimensions.Z}, latestDM.version);
 
   Object.keys(d.Data.FuelCells).forEach(v => {

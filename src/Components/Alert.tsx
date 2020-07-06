@@ -5,7 +5,7 @@ import "../Style/Alert.scss";
 export enum AlertType {
   Error = "error", Warning = "warning", Success = "success"
 }
-const defaultAlertLength = 2000;
+const defaultAlertLength = 2500;
 const animationLength = 500;
 
 export interface IAlert {
