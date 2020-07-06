@@ -1,7 +1,7 @@
 import React from 'react';
 
 import "./Style/App.scss"
-import {getReactorFromHellrageConfig} from "./Utils/parsers/HellragePlanner";
+import {getReactorFromHellrageConfig, hellrageLatestVersion} from "./Utils/parsers/HellragePlanner";
 import {Config} from "./Utils/Config";
 
 import sampleC from "./Utils/parsers/ZAHEB-248_23_x_23_x_23.json";
@@ -20,10 +20,9 @@ enum ModalState {
   None, Import, Export, Symmetries, Display, Stats
 }
 
-enum ImportMode {
-  Override, Additive
-}
-
+enum ImportMode { Override, Additive }
+enum ImportStatus { OK = "success", Warn = "warning", Error = "error" }
+enum ImportType { NCPF, Hellrage, Sakura }
 
 interface State {
   grids: {[x in GridType]: GenericGrid<x>[]}
@@ -32,7 +31,7 @@ interface State {
   displayScale: number
   dimensions: Dimensions
   modalState: ModalState
-  importFiles: FileList|null
+  importFiles: {data: object|ArrayBuffer, status: ImportStatus, name: string, type: ImportType, message?: string}[]
   importMode: ImportMode
 }
 
@@ -49,7 +48,7 @@ class App extends React.Component<{}, State> {
     displayScale: 2,
     dimensions: {width: 7, depth: 7, height: 7},
     modalState: ModalState.None,
-    importFiles: null,
+    importFiles: [],
     importMode: ImportMode.Additive
   }
   config: Config|undefined;
@@ -59,18 +58,56 @@ class App extends React.Component<{}, State> {
       this.config = new Config(t, "0.0.1");
       const r = getReactorFromHellrageConfig(sampleC, this.config);
       r.name = "Preview Reactor";
-      this.addSFR(r);
+      this.SFRAdd(r);
     });
 
-    document.addEventListener(overlayOpenInvokeEvent, this.openOverlay);
-    document.addEventListener(overlayCloseInvokeEvent, this.closeOverlay);
+    document.addEventListener(overlayOpenInvokeEvent, this.overlayOpen);
+    document.addEventListener(overlayCloseInvokeEvent, this.overlayClose);
   }
 
   importChange = ({target: {files}}: React.ChangeEvent<HTMLInputElement>) => {
-    this.setState({importFiles: files});
+    Array.from(files || []).forEach((f: File) => {
+      const reader = new FileReader();
+      if (f.name.endsWith(".json")) {
+        reader.addEventListener("load", () => {
+          if (typeof reader.result !== "string") return; // sanity check
+          const data = JSON.parse(reader.result);
+          if (data.hasOwnProperty("SaveVersion") && data.SaveVersion.hasOwnProperty("Major")) {
+            // Hellrage
+            const status = data.SaveVersion.Major === hellrageLatestVersion[0] ? (
+              data.SaveVersion.Minor === hellrageLatestVersion[1] && data.SaveVersion.Build === hellrageLatestVersion[2] ? ImportStatus.OK : ImportStatus.Warn
+            ) : ImportStatus.Error;
+            this.setState(s => ({
+              importFiles: [...s.importFiles, {data: data, status: status, name: f.name.substring(0, f.name.length-5), type: ImportType.Hellrage,
+                ...(status === ImportStatus.OK ? {} : {
+                  message: status === ImportStatus.Warn ?
+                    "This reactor was build in an older version, it is possible it won't work now" :
+                    "This reactor was made for NuclearCraft (underhaul), but this planner currently supports only NC Overhauled"
+                })}]
+            }));
+          } else {
+            // TODO: handle Sakura format
+          }
+        });
+        reader.readAsText(f);
+      } else if (f.name.endsWith(".ncpf")) {
+        reader.addEventListener("load", () => {
+          if (!(reader.result instanceof ArrayBuffer)) return; // sanity check
+          const data = reader.result;
+          // TODO: read count of reactors, add all as separate
+          this.setState(s => ({
+            importFiles: [
+              ...s.importFiles,
+              {data: data, status: ImportStatus.Warn, name: f.name.substring(0, f.name.length-5), type: ImportType.NCPF, message: "NCPF is not 100% supported yet"}
+            ]
+          }));
+        });
+        reader.readAsArrayBuffer(f);
+      }
+    });
   };
   importAction = () => {
-    if (!this.state.importFiles) return;
+    if (!this.state.importFiles.length) return;
     if (this.state.importMode === ImportMode.Override) {
       this.setState({
         grids: {
@@ -82,35 +119,42 @@ class App extends React.Component<{}, State> {
         }
       })
     }
-    Array.from(this.state.importFiles).forEach(f => {
-      const reader = new FileReader();
-      reader.addEventListener("load", () => {
-        if (!reader.result) throw new Error(/*TODO*/);
-        if (reader.result instanceof ArrayBuffer) throw new Error(/*TODO*/);
-        try {
-          const r = getReactorFromHellrageConfig(JSON.parse(reader.result), this.config!);
-          r.name = f.name;
-          this.addSFR(r);
-        } catch (e) {
-          console.error(e);
+    this.state.importFiles.forEach(f => {
+      switch (f.type) {
+        case ImportType.NCPF: {
+          // TODO
+          break;
         }
-        console.log(reader.result);
-      });
-      reader.addEventListener("error", e => {
-        console.error(e);
-        // TODO: error handling
-      })
-      reader.readAsText(f);
+        case ImportType.Hellrage: {
+          try {
+            const r = getReactorFromHellrageConfig(f.data, this.config!);
+            r.name = f.name;
+            this.SFRAdd(r);
+          } catch (e) {
+            console.error(e);
+          }
+          break;
+        }
+        case ImportType.Sakura: {
+
+          break;
+        }
+      }
     });
     this.setState({modalState: ModalState.None});
   };
+  importRemove = (n: number) => {
+    const tmp = [...this.state.importFiles];
+    tmp.splice(n, 1)
+    this.setState({importFiles: tmp});
+  }
 
-  activeValid(): boolean {
+  isActiveValid(): boolean {
     const {active: {index, type}, grids} = this.state;
     return index >= 0 && index < grids[type].length;
   }
 
-  addSFR = (r: SFRGrid) => {
+  SFRAdd = (r: SFRGrid) => {
     console.log("add");
     this.setState(s => {
       const {grids} = s;
@@ -120,26 +164,26 @@ class App extends React.Component<{}, State> {
       };
     });
   };
-  resetSFR = () => {
+  SFRReset = () => {
     const {grids, dimensions, active: {type, index}} = this.state;
-    if (this.activeValid()) {
+    if (this.isActiveValid()) {
       grids[type][index].reset(dimensions);
     } else {
-      this.addSFR(new SFRGrid(this.config!, dimensions, latestDM.version));
+      this.SFRAdd(new SFRGrid(this.config!, dimensions, latestDM.version));
     }
   };
 
-  openOverlay = () => {
+  overlayOpen = () => {
     this.setState({overlay: true});
   };
-  closeOverlay = () => {
+  overlayClose = () => {
     document.dispatchEvent(new Event(overlayClosedEvent));
     this.setState({overlay: false});
   };
 
   render() {
     const {active: {index, type}, grids} = this.state;
-    const activeGrid = this.activeValid() ? grids[type][index] : null;
+    const activeGrid = this.isActiveValid() ? grids[type][index] : null;
     return <>
       <Modal shown={this.state.modalState === ModalState.Import} onClose={() => this.setState({modalState: ModalState.None})}
              className="modal__import">
@@ -160,10 +204,17 @@ class App extends React.Component<{}, State> {
             Additive
           </label>
         </div>
+        {this.state.importFiles.length ? <div className="modal__body">
+          {this.state.importFiles.map((v, i) => <div key={i} className="import-files">
+            <span className={`import-files__status import-files__status--${v.status}`} title={v.message}/>
+            <span className="import-files__name">{v.name}</span>
+            <span className="import-files__remove" onClick={() => this.importRemove(i)}>&times;</span>
+          </div>)}
+        </div> : undefined}
         <div className="modal__footer">
           <input type="file" id="import-file" accept="application/json,.ncpf" multiple onChange={this.importChange}/>
-          <label htmlFor="import-file">{this.state.importFiles ? `${this.state.importFiles.length} file(s) selected` : "Select files..."}</label>
-          {this.state.importFiles ? <><br/><button onClick={this.importAction}>Import</button></> : undefined}
+          <label htmlFor="import-file">{this.state.importFiles ? `Add files...` : "Select files..."}</label>
+          {this.state.importFiles.length ? <><br/><button onClick={this.importAction}>Import</button></> : undefined}
         </div>
       </Modal>
       <div className="main_container">
@@ -184,7 +235,7 @@ class App extends React.Component<{}, State> {
             NAME
           </div>
           <div className="flex__cols flex--even">
-            <button onClick={() => this.setState({modalState: ModalState.Import, importFiles: null})}>Import</button>
+            <button onClick={() => this.setState({modalState: ModalState.Import, importFiles: []})}>Import</button>
             <button onClick={() => this.setState({modalState: ModalState.Export})}>Export [NYI]</button>
           </div>
           <div>
@@ -212,7 +263,7 @@ class App extends React.Component<{}, State> {
                      onChange={({target: {value}}) => this.setState(s => ({dimensions: {...s.dimensions, depth: parseInt(value)}}))}/>
             </div>
             <div>
-              <button onClick={() => {if (window.confirm("Really reset?")) this.resetSFR()}}>Reset</button>
+              <button onClick={() => {if (window.confirm("Really reset?")) this.SFRReset()}}>Reset</button>
             </div>
             <div>
               <button>Manage symmetries [NYI]</button>
@@ -249,7 +300,7 @@ class App extends React.Component<{}, State> {
           </div>
         </div>
       </div>
-      <DarkenedBackground enabled={this.state.overlay} onClick={this.closeOverlay}/>
+      <DarkenedBackground enabled={this.state.overlay} onClick={this.overlayClose}/>
     </>;
   }
 }

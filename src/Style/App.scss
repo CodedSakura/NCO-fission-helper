@@ -147,3 +147,38 @@
     width: 100%;
   }
 }
+
+.import-files {
+  display: flex;
+  &__status {
+    flex: 0 0 14px;
+    height: 14px;
+    border-radius: 50%;
+    margin-right: 2px;
+    &--success {
+      background-color: green;
+    }
+    &--warning {
+      background-color: yellow;
+    }
+    &--error {
+      background-color: red;
+    }
+  }
+
+  &__name {
+    flex: 1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  &__remove {
+    flex: 0 0;
+    //width: 14px;
+    //height: 14px;
+    border: 1px solid #fff8;
+    border-radius: 4px;
+    padding: 0 4px;
+  }
+}

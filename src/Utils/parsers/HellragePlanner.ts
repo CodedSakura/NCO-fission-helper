@@ -72,6 +72,8 @@ type HellrageConfig = {
   }
 }
 
+export const hellrageLatestVersion = [2, 1, 7];
+
 export function getReactorFromHellrageConfig(data: object, config: Config) {
   const d = data as HellrageConfig;
   const r = new SFRGrid(config, {width: d.Data.InteriorDimensions.X, height: d.Data.InteriorDimensions.Y, depth: d.Data.InteriorDimensions.Z}, latestDM.version);
