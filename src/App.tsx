@@ -80,7 +80,7 @@ class App extends React.Component<{}, State> {
       });
       if (f.name.endsWith(".json")) {
         reader.addEventListener("load", () => {
-          if (typeof reader.result !== "string") return; // sanity check
+          if (typeof reader.result !== "string") return;
           const data = JSON.parse(reader.result);
           if (data.hasOwnProperty("SaveVersion") && data.SaveVersion.hasOwnProperty("Major")) {
             // Hellrage
@@ -102,13 +102,13 @@ class App extends React.Component<{}, State> {
         reader.readAsText(f);
       } else if (f.name.endsWith(".ncpf")) {
         reader.addEventListener("load", () => {
-          if (!(reader.result instanceof ArrayBuffer)) return; // sanity check
+          if (!(reader.result instanceof ArrayBuffer)) return;
           const data = reader.result;
           // TODO: read count of reactors, add all as separate
           this.setState(s => ({
             importFiles: [
               ...s.importFiles,
-              {data: data, status: ImportStatus.Warn, name: f.name.substring(0, f.name.length-5), type: ImportType.NCPF, message: "NCPF is not 100% supported yet"}
+              {data: data, status: ImportStatus.Error, name: f.name.substring(0, f.name.length-5), type: ImportType.NCPF, message: "NCPF is not supported yet"}
             ]
           }));
         });
@@ -144,7 +144,7 @@ class App extends React.Component<{}, State> {
             if (e instanceof HellrageParserVersionError) {
               dispatchAlert(AlertType.Error, "This planner currently supports only NC Overhauled!")
             } else {
-              dispatchAlert(AlertType.Error, `Failed to parse config in \`${f.name}\``);
+              dispatchAlert(AlertType.Error, `Failed to parse config \`${f.name}\``);
               console.error(e, f);
             }
           }
