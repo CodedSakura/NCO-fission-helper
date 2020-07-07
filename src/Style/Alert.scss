@@ -1,0 +1,56 @@
+.alert {
+  &__cont {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    width: 350px;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 1300;
+  }
+
+
+  width: 90%;
+  position: relative;
+  margin: 10px auto;
+  padding: 4px;
+  border-radius: 4px;
+  animation: AnimAlertEnter .4s ease;
+
+  @mixin coloredAlert($color) {
+    background-color: rgba($color, .4);
+    border: 2px solid rgba($color, .7);
+    box-shadow: 0 0 4px 3px rgba($color, .3);
+  }
+  &__error   { @include coloredAlert(#D50000); }
+  &__success { @include coloredAlert(#00C853); }
+  &__warning { @include coloredAlert(#FFEA00); }
+
+  &--exit {
+    animation: AnimAlertExit .3s ease;
+    animation-fill-mode: forwards;
+  }
+}
+
+@keyframes AnimAlertEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes AnimAlertExit {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}

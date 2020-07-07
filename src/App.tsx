@@ -1,20 +1,21 @@
 import React from 'react';
 
 import "./Style/App.scss"
-import {getReactorFromHellrageConfig, hellrageLatestVersion} from "./Utils/parsers/HellragePlanner";
+import {getReactorFromHellrageConfig, hellrageLatestVersion, HellrageParserVersionError} from "./Utils/parsers/HellragePlanner";
 import {Config} from "./Utils/Config";
 
-import sampleC from "./Utils/parsers/ZAHEB-248_23_x_23_x_23.json";
+import sampleC from "./Utils/parsers/ZALEU-235_OXHEP-239_7_x_7_x_7.json";
 import FissionReactor from "./Components/Grids/FissionReactor";
 import {SFRGrid} from "./Utils/Grids/SFRGrid";
 import BurgerMenu from "./Components/BurgerMenu";
 import {latestDM} from "./Utils/dataMap";
 import DarkenedBackground from "./Components/DarkenedBackground";
-import {overlayClosedEvent, overlayCloseInvokeEvent, overlayOpenInvokeEvent} from "./Utils/events";
-import {classMap} from "./Utils/utils";
+import {alertInvokeEvent, overlayClosedEvent, overlayCloseInvokeEvent, overlayOpenInvokeEvent} from "./Utils/events";
+import {classMap, dispatchAlert} from "./Utils/utils";
 import {Dimensions} from "./Utils/types";
 import Modal from "./Components/Modal";
 import {GenericGrid, GridType} from "./Utils/Grids/GenericGrid";
+import Alert, {AlertType, IAlert} from "./Components/Alert";
 
 enum ModalState {
   None, Import, Export, Symmetries, Display, Stats
@@ -33,6 +34,7 @@ interface State {
   modalState: ModalState
   importFiles: {data: object|ArrayBuffer, status: ImportStatus, name: string, type: ImportType, message?: string}[]
   importMode: ImportMode
+  activeAlerts: {[x: number]: JSX.Element}
 }
 
 class App extends React.Component<{}, State> {
@@ -49,9 +51,11 @@ class App extends React.Component<{}, State> {
     dimensions: {width: 7, depth: 7, height: 7},
     modalState: ModalState.None,
     importFiles: [],
-    importMode: ImportMode.Additive
+    importMode: ImportMode.Additive,
+    activeAlerts: {},
   }
   config: Config|undefined;
+  alertID: number = 0;
 
   componentDidMount() {
     fetch("./nuclearcraft_default.cfg").then(r => r.text()).then(t => {
@@ -63,11 +67,17 @@ class App extends React.Component<{}, State> {
 
     document.addEventListener(overlayOpenInvokeEvent, this.overlayOpen);
     document.addEventListener(overlayCloseInvokeEvent, this.overlayClose);
+
+    document.addEventListener(alertInvokeEvent, this.alertEvent);
   }
 
   importChange = ({target: {files}}: React.ChangeEvent<HTMLInputElement>) => {
     Array.from(files || []).forEach((f: File) => {
       const reader = new FileReader();
+      reader.addEventListener("error", e => {
+        dispatchAlert(AlertType.Error, `Failed to read file \`${f.name}\``);
+        console.error(e, f);
+      });
       if (f.name.endsWith(".json")) {
         reader.addEventListener("load", () => {
           if (typeof reader.result !== "string") return; // sanity check
@@ -131,7 +141,12 @@ class App extends React.Component<{}, State> {
             r.name = f.name;
             this.SFRAdd(r);
           } catch (e) {
-            console.error(e);
+            if (e instanceof HellrageParserVersionError) {
+              dispatchAlert(AlertType.Error, "This planner currently supports only NC Overhauled!")
+            } else {
+              dispatchAlert(AlertType.Error, `Failed to parse config in \`${f.name}\``);
+              console.error(e, f);
+            }
           }
           break;
         }
@@ -179,6 +194,25 @@ class App extends React.Component<{}, State> {
   overlayClose = () => {
     document.dispatchEvent(new Event(overlayClosedEvent));
     this.setState({overlay: false});
+  };
+
+  alertEvent = (e: Event) => {
+    const d = e as CustomEvent<IAlert>;
+    this.setState(s => {
+      const id = this.alertID++;
+      return {
+        activeAlerts: {
+          ...s.activeAlerts,
+          [id]: <Alert key={id} type={d.detail.type} onDeath={this.alertDeath(id)}>{d.detail.message}</Alert>
+        }
+      };
+    });
+  }
+  alertDeath = (id: number) => () => {
+    this.setState(s => {
+      delete s.activeAlerts[id];
+      return s;
+    })
   };
 
   render() {
@@ -301,6 +335,9 @@ class App extends React.Component<{}, State> {
         </div>
       </div>
       <DarkenedBackground enabled={this.state.overlay} onClick={this.overlayClose}/>
+      <div className="alert__cont">
+        {Object.values(this.state.activeAlerts).reverse()}
+      </div>
     </>;
   }
 }
