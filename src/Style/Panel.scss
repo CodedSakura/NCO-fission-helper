@@ -1,0 +1,106 @@
+.panel {
+  $top: &;
+
+  max-width: 40vw;
+  min-width: 180px;
+
+  background: rebeccapurple;
+
+  &:not(:last-child) {
+    border-bottom: 1px solid darkgray;
+  }
+
+  &--resizable {
+    resize: both;
+  }
+
+  &--minimised {
+    & #{$top}__body {
+      height: 0;
+      overflow: hidden;
+      padding: 0;
+    }
+    & #{$top}__toolbar {
+      border-bottom: none;
+    }
+  }
+
+  &--docked {
+    &__resize-handle {
+      position: absolute;
+      height: 6px;
+      width: 100%;
+      margin-top: -2px;
+      cursor: ns-resize;
+      z-index: 10;
+    }
+  }
+
+  &__toolbar {
+    //height: 18px;
+    width: 100%;
+    display: inline-flex;
+    flex-direction: row;
+    border-bottom: 1px solid darkgray; // TODO
+    &__name {
+      padding-left: 2px;
+    }
+    &__handle {
+      margin: 3px;
+      flex: 1 1;
+      background-color: red; // TODO
+      cursor: move;
+    }
+    &__minimize, &__close {
+      cursor: pointer;
+      flex: 0 0 16px;
+      text-align: center;
+    }
+    &__minimise {}
+    &__close {}
+  }
+
+  &__body {
+    padding: 3px;
+  }
+
+  &__dock {
+    background-color: green;
+
+    flex: 0 0 400px;
+    width: 400px;
+    height: 100vh;
+    position: relative;
+    max-width: 40vw;
+    min-width: 180px;
+
+    &__resize-handle {
+      position: absolute;
+      height: 100vh;
+      width: 6px;
+      top: 0;
+      cursor: ew-resize;
+      z-index: 10;
+
+      &:last-child {
+        right: 0;
+        margin-right: -4px;
+      }
+      &:first-child {
+        left: 0;
+        margin-left: -4px;
+      }
+    }
+
+    &--right {
+      border-left: 1px solid darkgray;
+    }
+    &--left {
+      border-right: 1px solid darkgray;
+    }
+  }
+
+  &__container {
+    height: 100vh;
+  }
+}
