@@ -4,13 +4,14 @@ export enum PanelDockLocation {
   None, Left, Right
 }
 
-export enum PanelPosition {
+export enum PanelPosMode {
   Docked, Floating, Window
 }
 
 export const limits = {
   w: (v: number): number => Math.max(180, Math.min(v, .4 * window.innerWidth)),
-  h: (v: number, m: number, c: number): number =>
+  h: (v: number): number => Math.max(120, v),
+  h_d: (v: number, m: number, c: number): number =>
         ((h: number) => Math.max(h, Math.min(v, m - h)))(Math.min(120, window.innerHeight / c - 5))
 }
 
@@ -21,10 +22,11 @@ export interface IPanelProps {
 }
 
 export interface IPanelState {
-  state: PanelPosition
+  state: PanelPosMode
   minimised: boolean
   position: {x: number, y: number}
   size: {w: number, h: number}
+  dockedRatio: number
 }
 
 export interface ICommonPanelProps {
@@ -33,4 +35,5 @@ export interface ICommonPanelProps {
 
   onMinimise(): any
   onClose(): any
+  onPosModeSwitch(newPosMode: PanelPosMode): any
 }
