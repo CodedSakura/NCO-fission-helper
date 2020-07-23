@@ -25,7 +25,7 @@ class PanelGeneric extends Component<Props> {
             {panelProps.data}
           </div>
         </div>
-      case PanelPosMode.Window:
+      case PanelPosMode.Windowed:
         return <div className="panel__body">{panelProps.data}</div>
       default:
         throw new Error(`${panelState.state} is not a valid panel state`);
