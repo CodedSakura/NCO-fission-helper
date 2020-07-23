@@ -10,7 +10,7 @@ interface State {
 
 class PanelWrapper extends Component<Props, State> {
   render() {
-    if (this.props.panelState.state === PanelPosMode.Window) return null;
+    if (this.props.panelState.state === PanelPosMode.Windowed) return null;
     return <PanelGeneric {...this.props}/>;
     // return <div/>
   }

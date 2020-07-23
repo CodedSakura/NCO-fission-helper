@@ -5,7 +5,7 @@ export enum PanelDockLocation {
 }
 
 export enum PanelPosMode {
-  Docked, Floating, Window
+  Docked, Floating, Windowed
 }
 
 export const limits = {
