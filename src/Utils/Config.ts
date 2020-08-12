@@ -29,7 +29,7 @@ const numberMap = {
 function parseSinkRule(input: string): SinkRuleSet {
   const out: SinkRuleSet = {
     rules: [],
-    var: input.indexOf("||") < 0 ? "&&" : "||",
+    var: input.includes("&&") ? "&&" : "||",
   };
   out.rules = input.split(out.var).map(v => {
     const o: Partial<SinkRule> = {
