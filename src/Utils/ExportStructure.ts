@@ -29,7 +29,7 @@ export interface ReactorSF extends NCOH3DStructure {
 export interface ReactorMS extends NCOH3DStructure {
   data: number[][][]
   stats: {
-    output: number[] // mB/t
+    outputs: {coolant: string, output: number}[] // mB/t
 
     heating: number
     cooling: number
