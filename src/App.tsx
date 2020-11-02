@@ -26,7 +26,7 @@ enum ImportStatus { OK = "success", Warn = "warning", Error = "error" }
 enum ImportType { NCPF, Hellrage, Sakura }
 
 interface State {
-  grids: {[x in GridType]: GenericGrid<x>[]}
+  grids: {[x in GridType]: GenericGrid[]}
   active: {type: GridType, index: number}
   overlay: boolean
   displayScale: number

@@ -2,9 +2,9 @@ import {dataMap, latestDM} from "../dataMap";
 import {Dimensions, FissionReactorExport, GridProblem, Position} from "../types";
 import {Config} from "../Config";
 import {SFRTile} from "./SFRTile";
-import {GenericGrid, GridType, PickerData} from "./GenericGrid";
+import {GenericGrid, PickerData} from "./GenericGrid";
 
-export class SFRGrid extends GenericGrid<GridType.SFR> {
+export class SFRGrid extends GenericGrid {
   grid: SFRTile[][][] = [];
   config: Config;
   dataMap: any = latestDM;
@@ -197,11 +197,12 @@ export class SFRGrid extends GenericGrid<GridType.SFR> {
         const offsets: Position[] = [];
         neighbours.forEach(nCell => {
           switch (rule.relatedComp) {
+            // @ts-ignore
             case "moderator":
               if (nCell.tile.type !== "moderator") break;
               if (!nCell.tile.active)
                 break;
-            // fallthrough
+            /* fallthrough */
             case "wall":
             case "cell":
               if (nCell.tile.type === rule.relatedComp)

@@ -10,7 +10,7 @@ export interface PickerData {
   type: string
 }
 
-export abstract class GenericGrid<T> {
+export abstract class GenericGrid {
   abstract name: string;
 
   abstract pickerFiles: PickerData[];
