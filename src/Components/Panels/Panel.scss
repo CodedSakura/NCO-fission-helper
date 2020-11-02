@@ -67,28 +67,34 @@
   &__dock {
     background-color: green;
 
-    flex: 0 0 400px;
-    width: 400px;
-    height: 100vh;
     position: relative;
-    max-width: 40vw;
-    min-width: 180px;
+    flex: 0 0 400px;
 
     &__resize-handle {
       position: absolute;
-      height: 100vh;
-      width: 6px;
       top: 0;
-      cursor: ew-resize;
       z-index: 10;
+    }
 
-      &:last-child {
-        right: 0;
-        margin-right: -4px;
-      }
-      &:first-child {
-        left: 0;
-        margin-left: -4px;
+    &--left, &--right {
+      //width: attr(data-size px, 400px);
+      width: 400px;
+      height: 100%;
+      min-width: 20px;
+
+      & .panel__dock__resize-handle {
+        height: 100%;
+        width: 6px;
+        cursor: ew-resize;
+
+        &:last-child {
+          right: 0;
+          margin-right: -4px;
+        }
+        &:first-child {
+          left: 0;
+          margin-left: -4px;
+        }
       }
     }
 
@@ -98,9 +104,26 @@
     &--left {
       border-right: 1px solid darkgray;
     }
+
+    &--bottom {
+      //height: attr(data-size px, 400px);
+      height: 400px;
+      width: 100%;
+      min-height: 20px;
+      border-top: 1px solid darkgray;
+
+      & .panel__dock__resize-handle {
+        width: 100%;
+        height: 6px;
+        cursor: ns-resize;
+        top: 0;
+        margin-top: -4px;
+      }
+    }
   }
 
   &__container {
-    height: 100vh;
+    height: 100%;
+    width: 100%;
   }
 }

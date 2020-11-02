@@ -17,7 +17,7 @@ const defaultProps: Required<Props> = {
 
 interface State {
   panelMap: IPanelState[]
-  width: number
+  size: number
 }
 
 const defaultPanelState: IPanelState = {state: PanelPosMode.Docked, minimised: false, position: {x: 0, y: 0}, size: {w: 0, h: 0}, dockedRatio: 0};
@@ -25,7 +25,7 @@ const defaultPanelState: IPanelState = {state: PanelPosMode.Docked, minimised: f
 class PanelDock extends Component<Props, State> {
   state: State = {
     panelMap: [],
-    width: 400
+    size: 400
   }
   dockRef: HTMLDivElement|null = null;
 
@@ -49,7 +49,7 @@ class PanelDock extends Component<Props, State> {
     const bcr = this.dockRef.getBoundingClientRect();
     let map: IPanelState[] = [];
     for (let i = 0, c = this.props.panels.length; i < c; i++) {
-      map.push({...defaultPanelState, size: {w: this.state.width, h: (bcr.height - c+1) / c}, dockedRatio: 1});
+      map.push({...defaultPanelState, size: {w: this.state.size, h: (bcr.height - c+1) / c}, dockedRatio: 1});
     }
     this.setState({panelMap: map});
   };
@@ -93,15 +93,23 @@ class PanelDock extends Component<Props, State> {
     window.addEventListener("mousemove", this.onDockResizeMove);
     window.addEventListener("mouseup", this.onDockResizeUp);
     this.dockRef.style.userSelect = "none";
-    document.body.style.cursor = "ew-resize";
+    document.body.style.cursor = location === PanelDockLocation.Bottom ? "ns-resize" : "ew-resize";
   };
   onDockResizeMove = (e: MouseEvent) => {
     const {location} = {...defaultProps, ...this.props};
     if (location === PanelDockLocation.None) throw new Error("How?????????");
     let w: number;
-    if (location === PanelDockLocation.Left) w = e.pageX;
-    else w = window.innerWidth - e.pageX;
-    this.setState({width: limits.w(w)});
+    switch (location) {
+      case PanelDockLocation.Left:
+        this.setState({size: limits.w(e.pageX)});
+        break;
+      case PanelDockLocation.Right:
+        this.setState({size: limits.w(window.innerWidth - e.pageX)});
+        break;
+      case PanelDockLocation.Bottom:
+        this.setState({size: limits.h(window.innerHeight - e.pageY)});
+        break;
+    }
   };
   onDockResizeUp = (_: MouseEvent) => {
     if (!this.dockRef) throw new Error("?!!???!? 01");
@@ -147,18 +155,19 @@ class PanelDock extends Component<Props, State> {
 
 
   render() {
-    const {panelMap, width} = this.state;
+    const {panelMap, size} = this.state;
     const {panels, location} = {...defaultProps, ...this.props};
     const unitSize = this.getUnitSize();
-    return <div className={classMap("panel__dock", location === PanelDockLocation.Right && "panel__dock--right", location === PanelDockLocation.Left && "panel__dock--left")}
-                style={{width: width, flexBasis: width}}>
+    return <div className={classMap("panel__dock", location === PanelDockLocation.Right && "panel__dock--right", location === PanelDockLocation.Left && "panel__dock--left", location === PanelDockLocation.Bottom && "panel__dock--bottom")}
+                style={location === PanelDockLocation.Bottom ? {height: size, flexBasis: size} : {width: size, flexBasis: size}} /*data-size={width+"px"}*/>
       {location === PanelDockLocation.Right ? <div className="panel__dock__resize-handle" onMouseDown={this.onDockResizeDown}/> : null}
+      {location === PanelDockLocation.Bottom ? <div className="panel__dock__resize-handle" onMouseDown={this.onDockResizeDown}/> : null}
       <div className="panel__container" ref={r => this.dockRef = r}>
         {panelMap.length ? panels.map((v, k, {length}) => {
           const state = panelMap[k];
           if (state.state === PanelPosMode.Docked)
             return [
-              <PanelWrapper key={k} panelProps={v} panelState={{...state, size: {w: width, h: unitSize * state.dockedRatio}}}
+              <PanelWrapper key={k} panelProps={v} panelState={{...state, size: {w: size, h: unitSize * state.dockedRatio}}}
                             onMinimise={this.onMinimise(k)} onClose={this.onClose(k)} onPosModeSwitch={this.onPosModeSwitch(k)}/>,
               k < length-1 ? <div key={length + k} className="panel--docked__resize-handle" onMouseDown={this.onDockedPanelResizeDown(k)}/> : null
             ];
