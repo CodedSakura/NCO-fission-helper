@@ -2,7 +2,8 @@ import React, {Component} from 'react';
 import {ICommonPanelProps, PanelPosMode} from "./definitions";
 import PanelGeneric from "./PanelGeneric";
 
-interface Props extends ICommonPanelProps {}
+interface Props extends ICommonPanelProps {
+}
 
 interface State {
   //

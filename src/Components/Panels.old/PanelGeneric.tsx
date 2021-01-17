@@ -2,10 +2,12 @@ import React, {Component} from 'react';
 import {classMap} from "../../Utils/utils";
 import {ICommonPanelProps, PanelPosMode} from "./definitions";
 
-interface Props extends ICommonPanelProps {}
+interface Props extends ICommonPanelProps {
+}
 
 class PanelGeneric extends Component<Props> {
-  onOptions = () => {};
+  onOptions = () => {
+  };
 
   render() {
     const {onClose, onMinimise, panelProps, panelState} = this.props;

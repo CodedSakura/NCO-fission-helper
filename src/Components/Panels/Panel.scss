@@ -1,12 +1,13 @@
 .panel {
-  $top: &;
-
-  max-width: 40vw;
-  min-width: 180px;
-
+  $panelContBorders: 1px solid darkgray;
+  $panelInnerColor: darkgray;
   background: rebeccapurple;
 
-  &:not(:last-child) {
+  flex-grow: 1;
+  flex-basis: 0;
+  overflow: auto;
+
+  /*&:not(:last-child) {
     border-bottom: 1px solid darkgray;
   }
 
@@ -15,12 +16,13 @@
   }
 
   &--minimised {
-    & #{$top}__body {
+    & .panel__body {
       height: 0;
       overflow: hidden;
       padding: 0;
     }
-    & #{$top}__toolbar {
+
+    & .panel__toolbar {
       border-bottom: none;
     }
   }
@@ -35,7 +37,6 @@
       z-index: 10;
     }
   }
-
   &__toolbar {
     //height: 18px;
     width: 100%;
@@ -45,85 +46,220 @@
     &__name {
       padding-left: 2px;
     }
+
     &__handle {
       margin: 3px;
       flex: 1 1;
       background-color: red; // TODO
       cursor: move;
     }
+
     &__minimize, &__close {
       cursor: pointer;
       flex: 0 0 16px;
       text-align: center;
     }
-    &__minimise {}
-    &__close {}
+
+    &__minimise {
+    }
+
+    &__close {
+    }
   }
 
   &__body {
     padding: 3px;
+  }*/
+
+  &__resize-handle {
+    flex: 0 0 1px;
+    background-color: $panelInnerColor;
+    position: relative;
+    &::after {
+      content: "";
+      z-index: 11;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }
   }
 
-  &__dock {
-    background-color: green;
 
+  &__dock {
     position: relative;
-    flex: 0 0 400px;
+    flex: 0 0;
 
     &__resize-handle {
       position: absolute;
-      top: 0;
       z-index: 10;
     }
 
     &--left, &--right {
-      //width: attr(data-size px, 400px);
-      width: 400px;
       height: 100%;
-      min-width: 20px;
+      min-width: 50px;
 
-      & .panel__dock__resize-handle {
+      & > .panel__dock__resize-handle {
         height: 100%;
-        width: 6px;
+        width: 7px;
         cursor: ew-resize;
+        top: 0;
 
         &:last-child {
           right: 0;
           margin-right: -4px;
         }
+
         &:first-child {
           left: 0;
           margin-left: -4px;
         }
       }
-    }
 
-    &--right {
-      border-left: 1px solid darkgray;
-    }
-    &--left {
-      border-right: 1px solid darkgray;
-    }
+      & > .panel__container {
+        flex-direction: column;
+      }
 
-    &--bottom {
-      //height: attr(data-size px, 400px);
-      height: 400px;
-      width: 100%;
-      min-height: 20px;
-      border-top: 1px solid darkgray;
-
-      & .panel__dock__resize-handle {
-        width: 100%;
-        height: 6px;
+      & .panel__resize-handle::after {
+        top: -3px;
+        bottom: -3px;
         cursor: ns-resize;
-        top: 0;
-        margin-top: -4px;
       }
     }
+    &--right { border-left: $panelContBorders; }
+    &--left { border-right: $panelContBorders; }
+
+    &--bottom, &--top {
+      width: 100%;
+      min-height: 50px;
+
+      & > .panel__dock__resize-handle {
+        width: 100%;
+        height: 7px;
+        cursor: ns-resize;
+
+        &:last-child {
+          bottom: 0;
+          margin-bottom: -4px;
+        }
+
+        &:first-child {
+          top: 0;
+          margin-top: -4px;
+        }
+      }
+
+      & .panel__resize-handle::after {
+        left: -3px;
+        right: -3px;
+        cursor: ew-resize;
+      }
+    }
+    &--bottom { border-top: $panelContBorders; }
+    &--top { border-bottom: $panelContBorders; }
   }
 
   &__container {
     height: 100%;
     width: 100%;
+    display: flex;
+  }
+
+  &__controller {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+
+    &__container {
+      display: flex;
+      flex-direction: row;
+      flex: 1;
+    }
+
+    &__body {
+      flex: 1;
+    }
+  }
+
+  &__menu {
+    display: flex;
+    flex-grow: 0;
+    flex-wrap: nowrap;
+
+    $border: 1px solid #fffa;
+    $size: 24px;
+    $margin: 8px;
+
+    &__item {
+      flex-grow: 0;
+      white-space: nowrap;
+      line-height: $size;
+      text-align: center;
+      //padding: $margin;
+      color: #fffa;
+      user-select: none;
+
+      &:hover {
+        background: #fff2;
+      }
+
+      &--active {
+        background: #fff4;
+        color: #fff;
+      }
+    }
+
+    &:not(&--vertical) {
+      height: $size;
+
+      &:first-child { border-bottom: $border; }
+      &:last-child { border-top: $border; }
+
+      > span {
+        padding: 0 $margin;
+      }
+    }
+
+    &--vertical {
+      flex-direction: column;
+      max-height: calc(100vh - #{2 * ($size + 1)});
+      overflow: hidden;
+      width: $size;
+
+      &:first-child {
+        border-right: $border;
+
+        > span {
+          transform: rotate(.5turn);
+        }
+      }
+
+      &:last-child { border-left: $border; }
+
+      > span {
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+        padding: $margin 0;
+      }
+    }
+
+    &__container {
+      display: flex;
+      flex: 1 0;
+      max-height: 100%;
+    }
+
+    &__sub-container {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    &__separator {
+      flex-grow: 1;
+    }
   }
 }
