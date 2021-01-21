@@ -1,8 +1,8 @@
-import { PanelDockLocation, PanelPosMode } from "./definitions";
+import { PanelDockLocation, PanelMode, PanelState } from "./definitions";
 import PanelDock from "./PanelDock";
 import PanelController from "./PanelController";
 
 import "./Panel.scss";
 
-export {PanelDockLocation, PanelPosMode, PanelDock}
+export {PanelDockLocation, PanelMode, PanelDock, PanelState}
 export default PanelController;

@@ -4,7 +4,7 @@ import {classMap} from "../../Utils/utils";
 
 interface Props {
   panels: [IPanelProps|null|undefined, IPanelProps|null|undefined]
-  open: [boolean, boolean]
+  // open: [boolean, boolean]
   location: PanelDockLocation
   saveLoad?: boolean // true
   id: string
@@ -129,17 +129,16 @@ class PanelDock extends Component<Props, State> {
 
 
   render() {
-    const {location, size, panels, open: _open} = this.props;
+    const {location, size, panels} = this.props;
     const {ratio} = this.state;
 
-    const open = _open.map((v, i) => v && panels[i])
+    const open = panels.map(v => !!v)
     const openCount = open.filter(v => v).length;
 
     if (openCount === 0) return null;
     return <div className={classMap("panel__dock", dockMaps.classes[location])} style={{flexBasis: size}}>
       {dockMaps.resize[location][0] ? <div className="panel__dock__resize-handle" onMouseDown={this.onDockResizeDown}/> : null}
       <div className="panel__container" ref={r => this.dockRef = r}>
-      {/*<div className="panel__container">*/}
         {openCount > 1 ? <>
           <div className="panel" style={{flexGrow: ratio}}>{panels[0]!.data}</div>
           <div className="panel__resize-handle" onMouseDown={this.onPanelRatioDown}/>
