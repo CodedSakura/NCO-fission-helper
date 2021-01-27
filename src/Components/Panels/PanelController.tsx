@@ -1,7 +1,20 @@
 import React, {Component} from "react";
-import {classDict, IPanelProps, Location4, location8List, location8To4Map, PanelDockLocation, PanelMode, PanelState, sizeInverseMap,} from "./definitions";
+import {
+  classDict,
+  IPanelProps,
+  IPanelPropsRequired,
+  Location4,
+  location8List,
+  location8To4Map,
+  PanelDockLocation,
+  PanelMode,
+  PanelState,
+  sizeInverseMap,
+} from "./definitions";
 import {classMap} from "../../Utils/utils";
 import PanelDock from "./PanelDock";
+import PanelFloating from "./PanelFloating";
+import PanelWindowed from "./PanelWindowed";
 
 
 export interface PanelControllerProps {
@@ -14,13 +27,15 @@ export interface PanelControllerProps {
   topLeft?: IPanelProps[]
   topRight?: IPanelProps[]
 
-  id: string
   saveLoad?: boolean // true
+
+  prepend?: React.ReactNode
+  append?: React.ReactNode
 }
 
 interface State {
   sizes:      {[x in Location4]: number}
-  positions:  {[x in Location4]: [Required<IPanelProps>[], Required<IPanelProps>[]]}
+  positions:  {[x in Location4]: [IPanelPropsRequired[], IPanelPropsRequired[]]}
   open: Set<string>
 }
 
@@ -53,7 +68,12 @@ export default class PanelController extends Component<PanelControllerProps, Sta
         }
       });
 
-      this.state.positions[loc][side] = panels.map(p => ({movable: true, mode: PanelMode.Docked, state: PanelState.Closed, ...p}));
+      this.state.positions[loc][side] = panels.map(p => ({
+        movable: true,
+        mode: PanelMode.Docked,
+        state: PanelState.Closed,
+        ...p
+      }));
     });
   }
 
@@ -82,11 +102,23 @@ export default class PanelController extends Component<PanelControllerProps, Sta
   setOpen = (loc: Location4, side: 0|1, name: string) => {
     this.setState(s => {
       const curr = s.open;
-      const prevOpen = this.getOpenDocked(s.positions[loc][side])?.name;
-      if (prevOpen !== name) curr.delete(prevOpen || "");
+
+      if (s.positions[loc][side]?.find(v => v.name === name)?.mode === PanelMode.Docked) {
+        const prevOpen = this.getOpenDocked(s.positions[loc][side])?.name;
+        if (prevOpen !== name) curr.delete(prevOpen || "");
+      }
+
       curr.has(name) ? curr.delete(name) : curr.add(name);
       return {open: new Set<string>(curr)};
     }, () => this.updateSize(sizeInverseMap[loc])(this.state.sizes[sizeInverseMap[loc]]));
+  }
+
+  close = (name: string) => {
+    this.setState(s => {
+      const curr = s.open;
+      s.open.delete(name);
+      return {open: new Set<string>(curr)};
+    });
   }
 
   getMenu = (loc: Location4) => {
@@ -106,30 +138,42 @@ export default class PanelController extends Component<PanelControllerProps, Sta
   }
 
   render() {
-    const {id, children, saveLoad = true} = this.props;
-    const {sizes, positions} = this.state;
-    const shorthand = (loc: Location4): [IPanelProps|undefined, IPanelProps|undefined] =>
-        [this.getOpenDocked(positions[loc][0]), this.getOpenDocked(positions[loc][1])];
-    return <div className="panel__controller">
-      {this.getMenu("top")}
-      <div className="panel__menu__container">
-        {this.getMenu("left")}
-        <div className="panel__menu__sub-container">
-          <PanelDock location={PanelDockLocation.Top} panels={shorthand("top")} id={`${id}-Top`}
-                     size={sizes.top} updateSize={this.updateSize("top")} saveLoad={saveLoad}/>
-          <div className="panel__controller__container">
-            <PanelDock location={PanelDockLocation.Left} panels={shorthand("left")} id={`${id}-Left`}
-                       size={sizes.left} updateSize={this.updateSize("left")} saveLoad={saveLoad}/>
-            <div className="panel__controller__body">{children}</div>
-            <PanelDock location={PanelDockLocation.Right} panels={shorthand("right")} id={`${id}-Right`}
-                       size={sizes.right} updateSize={this.updateSize("right")} saveLoad={saveLoad}/>
+    const {children, saveLoad = true, prepend, append} = this.props;
+    const {sizes, positions, open} = this.state;
+    type partialDockProps = { panels: [IPanelProps | undefined, IPanelProps | undefined], minimise: [() => any, () => any] };
+    const shorthand = (loc: Location4): partialDockProps =>
+      ((a, b): partialDockProps => ({
+        panels: [a, b],
+        minimise: [a ? () => this.setOpen(loc, 0, a.name) : () => {}, b ? () => this.setOpen(loc, 0, b.name) : () => {}]
+      }))(this.getOpenDocked(positions[loc][0]), this.getOpenDocked(positions[loc][1]));
+    return <>
+      {Object.values(positions).flat().flat().filter(v => open.has(v.name) && v.mode === PanelMode.Floating).map(v =>
+        <PanelFloating key={v.name} panelData={v} minimise={() => this.close(v.name)}/>)}
+      {Object.values(positions).flat().flat().filter(v => open.has(v.name) && v.mode === PanelMode.Windowed).map(v =>
+        <PanelWindowed key={v.name} panelData={v} minimise={() => this.close(v.name)}/>)}
+      <div className="panel__controller">
+        {prepend}
+        {this.getMenu("top")}
+        <div className="panel__menu__container">
+          {this.getMenu("left")}
+          <div className="panel__menu__sub-container">
+            <PanelDock location={PanelDockLocation.Top} {...shorthand("top")}
+                       size={sizes.top} updateSize={this.updateSize("top")} saveLoad={saveLoad}/>
+            <div className="panel__controller__container">
+              <PanelDock location={PanelDockLocation.Left} {...shorthand("left")}
+                         size={sizes.left} updateSize={this.updateSize("left")} saveLoad={saveLoad}/>
+              <div className="panel__controller__body">{children}</div>
+              <PanelDock location={PanelDockLocation.Right} {...shorthand("right")}
+                         size={sizes.right} updateSize={this.updateSize("right")} saveLoad={saveLoad}/>
+            </div>
+            <PanelDock location={PanelDockLocation.Bottom} {...shorthand("bottom")}
+                       size={sizes.bottom} updateSize={this.updateSize("bottom")} saveLoad={saveLoad}/>
           </div>
-          <PanelDock location={PanelDockLocation.Bottom} panels={shorthand("bottom")} id={`${id}-Bottom`}
-                     size={sizes.bottom} updateSize={this.updateSize("bottom")} saveLoad={saveLoad}/>
+          {this.getMenu("right")}
         </div>
-        {this.getMenu("right")}
+        {this.getMenu("bottom")}
+        {append}
       </div>
-      {this.getMenu("bottom")}
-    </div>
+    </>;
   }
 }

@@ -7,9 +7,9 @@ interface Props {
   // open: [boolean, boolean]
   location: PanelDockLocation
   saveLoad?: boolean // true
-  id: string
   updateSize(size: number): any
   size: number
+  minimise?: [() => any, () => any]
 }
 
 interface State {
@@ -102,6 +102,7 @@ class PanelDock extends Component<Props, State> {
     document.body.style.setProperty("cursor", dockMaps.cursor[dockMaps.direction[location][1]]);
   };
   onPanelRatioMove = (e: MouseEvent) => {
+    e.stopPropagation();
     e.preventDefault();
     if (e.buttons !== 1) {
       this.onPanelRatioUp(e);
@@ -129,23 +130,38 @@ class PanelDock extends Component<Props, State> {
 
 
   render() {
-    const {location, size, panels} = this.props;
+    const {location, size, panels, minimise = [undefined, undefined]} = this.props;
     const {ratio} = this.state;
 
     const open = panels.map(v => !!v)
     const openCount = open.filter(v => v).length;
+
+    const genPanel = (n: number, ratio: number) => <div className="panel" style={{flexGrow: ratio}}>
+      <div className="panel__header">
+        {panels[n]?.header || panels[n]?.name}
+        <div className="panel__header__spacer"/>
+        {(panels[n]?.headerButtons || []).length > 0 ? <>
+          {panels[n]?.headerButtons?.map((v, i) =>
+            <div key={i} className="panel__header__btn">{v.icon}</div>)}
+          <div className="panel__header__separator"/>
+        </> : null}
+        <div className="panel__header__btn">S</div>
+        <div className="panel__header__btn" onClick={minimise[n]}>M</div>
+      </div>
+      {panels[n]?.data}
+    </div>;
 
     if (openCount === 0) return null;
     return <div className={classMap("panel__dock", dockMaps.classes[location])} style={{flexBasis: size}}>
       {dockMaps.resize[location][0] ? <div className="panel__dock__resize-handle" onMouseDown={this.onDockResizeDown}/> : null}
       <div className="panel__container" ref={r => this.dockRef = r}>
         {openCount > 1 ? <>
-          <div className="panel" style={{flexGrow: ratio}}>{panels[0]!.data}</div>
+          {genPanel(0, ratio)}
           <div className="panel__resize-handle" onMouseDown={this.onPanelRatioDown}/>
-          <div className="panel" style={{flexGrow: 1-ratio}}>{panels[1]!.data}</div>
+          {genPanel(1, 1-ratio)}
         </> : <>
-          {open[0] ? <div className="panel">{panels[0]!.data}</div> : null}
-          {open[1] ? <div className="panel">{panels[1]!.data}</div> : null}
+          {open[0] ? genPanel(0, 1) : null}
+          {open[1] ? genPanel(1, 1) : null}
         </>}
       </div>
       {dockMaps.resize[location][1] ? <div className="panel__dock__resize-handle" onMouseDown={this.onDockResizeDown}/> : null}

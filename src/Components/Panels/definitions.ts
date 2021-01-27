@@ -44,10 +44,23 @@ export enum PanelState {
   Closed, Open, Hidden
 }
 
+export interface IPanelHeaderButton {
+  icon: ReactChild
+  dropDownOptions?: {text: string, icon?: ReactChild, onClick?(): any}|"spacer"[] // null is spacer
+}
+
 export interface IPanelProps {
   name: string
   data: ReactChild
   movable?: boolean // true
   state?: PanelState // Closed
   mode?: PanelMode // Docked
+  header?: ReactChild
+  headerButtons?: IPanelHeaderButton[]
+}
+
+export interface IPanelPropsRequired extends IPanelProps {
+  movable: boolean
+  state: PanelState
+  mode: PanelMode
 }

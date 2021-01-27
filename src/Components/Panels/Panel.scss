@@ -1,75 +1,57 @@
 .panel {
   $panelContBorders: 1px solid darkgray;
   $panelInnerColor: darkgray;
+  $rowHeight: 24px;
   background: rebeccapurple;
 
   flex-grow: 1;
   flex-basis: 0;
   overflow: auto;
 
-  /*&:not(:last-child) {
-    border-bottom: 1px solid darkgray;
-  }
+  &--floating {
+    border: $panelContBorders;
+    position: relative;
+    z-index: 21;
 
-  &--resizable {
-    resize: both;
-  }
-
-  &--minimised {
-    & .panel__body {
-      height: 0;
-      overflow: hidden;
-      padding: 0;
-    }
-
-    & .panel__toolbar {
-      border-bottom: none;
-    }
-  }
-
-  &--docked {
-    &__resize-handle {
-      position: absolute;
-      height: 6px;
-      width: 100%;
-      margin-top: -2px;
-      cursor: ns-resize;
-      z-index: 10;
-    }
-  }
-  &__toolbar {
-    //height: 18px;
-    width: 100%;
-    display: inline-flex;
-    flex-direction: row;
-    border-bottom: 1px solid darkgray; // TODO
-    &__name {
-      padding-left: 2px;
-    }
-
-    &__handle {
-      margin: 3px;
-      flex: 1 1;
-      background-color: red; // TODO
+    & > .panel__header {
       cursor: move;
     }
 
-    &__minimize, &__close {
-      cursor: pointer;
-      flex: 0 0 16px;
-      text-align: center;
-    }
-
-    &__minimise {
-    }
-
-    &__close {
+    &__resize-box {
+      content: "";
+      z-index: 20;
+      position: fixed;
+      margin: -5px;
+      padding: 5px;
     }
   }
 
-  &__body {
-    padding: 3px;
-  }*/
+  &--windowed {
+    width: 100%;
+    height: 100%;
+  }
+
+  &__header {
+    border-bottom: $panelContBorders;
+    height: $rowHeight;
+    line-height: $rowHeight;
+    display: flex;
+    padding: 0 2px;
+
+    &__spacer {
+      flex: 1;
+
+      & ~ * {
+        margin: 0 2px;
+      }
+    }
+
+    &__separator {
+      flex: 0 0 1px;
+      background-color: #fff4;
+      margin: 3px 2px;
+    }
+  }
 
   &__resize-handle {
     flex: 0 0 1px;
@@ -84,6 +66,26 @@
       left: 0;
       right: 0;
     }
+  }
+
+  &__resize {
+    z-index: 22;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 6px;
+    &--n { bottom: auto; }
+    &--s { top:    auto; }
+    &--e { left:   auto; }
+    &--w { right:  auto; }
+    &--n, &--s { cursor: ns-resize; }
+    &--e, &--w { cursor: ew-resize; }
+    &--n#{&}--e, &--s#{&}--w { cursor: nesw-resize; }
+    &--n#{&}--w, &--s#{&}--e { cursor: nwse-resize; }
+
+    &--corner { z-index: 23; }
   }
 
 
@@ -170,6 +172,7 @@
     display: flex;
     flex-direction: column;
     height: 100vh;
+    flex-basis: 100vh;
     width: 100vw;
     overflow: hidden;
 
@@ -190,15 +193,13 @@
     flex-wrap: nowrap;
 
     $border: 1px solid #fffa;
-    $size: 24px;
     $margin: 8px;
 
     &__item {
       flex-grow: 0;
       white-space: nowrap;
-      line-height: $size;
+      line-height: $rowHeight;
       text-align: center;
-      //padding: $margin;
       color: #fffa;
       user-select: none;
 
@@ -209,11 +210,15 @@
       &--active {
         background: #fff4;
         color: #fff;
+
+        &:hover {
+          background: #fff4;
+        }
       }
     }
 
     &:not(&--vertical) {
-      height: $size;
+      height: $rowHeight;
 
       &:first-child { border-bottom: $border; }
       &:last-child { border-top: $border; }
@@ -225,9 +230,11 @@
 
     &--vertical {
       flex-direction: column;
-      max-height: calc(100vh - #{2 * ($size + 1)});
+      //max-height: calc(100vh - #{2 * ($size + 1)});
+      //max-height: 100%;
+      //object-fit: contain;
       overflow: hidden;
-      width: $size;
+      width: $rowHeight;
 
       &:first-child {
         border-right: $border;
@@ -248,8 +255,9 @@
 
     &__container {
       display: flex;
-      flex: 1 0;
+      flex: 1;
       max-height: 100%;
+      overflow: hidden;
     }
 
     &__sub-container {

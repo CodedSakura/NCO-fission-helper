@@ -2,12 +2,12 @@ import React from 'react';
 import PanelDock, {PanelMode, PanelState} from "..";
 
 export default function PanelTest() {
-  return <PanelDock id="Main" leftTop={[
+  return <PanelDock prepend={"text"} leftTop={[
     {data: <div>Data [000]</div>, name: "Panel [000]"},
     {data: <div>Data [001]</div>, name: "Panel [001]"},
     {data: <div>Data [002]</div>, name: "Panel [002]"},
-    {data: <div>Data [003]</div>, name: "Panel [003]", state: PanelState.Open},
-    {data: <div>Data [004]</div>, name: "Panel [004]"},
+    {data: <div>Data [003]</div>, name: "Panel [003]", state: PanelState.Open, header: "003", headerButtons: [{icon: "L"}]},
+    {data: <div>Data [004]</div>, name: "Panel [004]", state: PanelState.Open, mode: PanelMode.Windowed},
     {data: <div>Data [005]</div>, name: "Long Panel [005]"},
     {data: <div>Data [006]</div>, name: "Panel [006]"},]} leftBottom={[
     {data: <div>Data [010]</div>, name: "Panel [010]"},
