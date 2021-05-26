@@ -14,11 +14,15 @@ export default class PanelWindowed extends React.Component<Props> {
   constructor(props: Props) {
     super(props);
     const {panelData: data, minimise = () => {}} = props;
-    this.window = window.open("", data.name, "toolbar=no,location=no,menubar=no,resizable=yes,width=400,height=400");
+    this.window = window.open("", data.name, "resizable,status,width=400,height=400");
     if (this.window) {
       this.window.document.title = data.name;
-      this.window.addEventListener("beforeunload", () => minimise());
-      Array.from(document.styleSheets).map(v => v.ownerNode).filter(v => v).forEach(v => this.window?.document.head.append(v!.cloneNode(true)));
+      this.window.addEventListener("beforeunload", minimise);
+      window.addEventListener("beforeunload", minimise);
+      Array.from(document.styleSheets).map(v => v.ownerNode).filter(v => v).forEach(v => {
+        if (v != null)
+          this.window?.document.head.append(v.cloneNode(true));
+      });
     }
   }
 
