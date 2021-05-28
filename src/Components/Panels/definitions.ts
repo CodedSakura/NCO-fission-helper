@@ -32,7 +32,9 @@ export const classDict = {
 }
 
 
-export const localStoragePrefix = "panel::";
+export const localStoragePanelPrefix = "panel::";
+export const localStorageDockRatioPrefix = "panel::dock::ratio::";
+export const localStorageControllerPrefix = "panel::controller::";
 
 
 export enum PanelDockLocation {

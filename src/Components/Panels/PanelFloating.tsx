@@ -1,5 +1,5 @@
 import React from "react";
-import {IPanelProps, localStoragePrefix} from "./definitions";
+import {IPanelProps, localStoragePanelPrefix} from "./definitions";
 
 interface Props {
   panelData: IPanelProps
@@ -40,7 +40,7 @@ export default class PanelFloating extends React.Component<Props, State> {
 
 
   loadLoc(name: string): Pos {
-    const locString = localStorage.getItem(localStoragePrefix + name);
+    const locString = localStorage.getItem(localStoragePanelPrefix + name);
     if (locString) {
       const loc = JSON.parse(locString);
       return {
@@ -60,7 +60,7 @@ export default class PanelFloating extends React.Component<Props, State> {
     }
   }
   saveLoc(name: string) {
-    localStorage.setItem(localStoragePrefix + name, JSON.stringify({
+    localStorage.setItem(localStoragePanelPrefix + name, JSON.stringify({
         left: this.state.x,
         top: this.state.y,
         width: this.state.width,

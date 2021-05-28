@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {IPanelProps, PanelDockLocation} from "./definitions";
+import {IPanelProps, localStorageDockRatioPrefix, PanelDockLocation} from "./definitions";
 import {classMap} from "../../Utils/utils";
 
 interface Props {
@@ -48,11 +48,30 @@ const dockMaps = {
 };
 
 class PanelDock extends Component<Props, State> {
-  state: State = {
-    ratio: .5,
-  };
+  state: State;
   dockRef: HTMLDivElement | null = null;
 
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      ratio: this.loadRatio(props.location)
+    }
+  }
+
+
+  saveRatio(loc: PanelDockLocation) {
+    localStorage.setItem(localStorageDockRatioPrefix + loc, JSON.stringify({
+      ratio: this.state.ratio
+    }));
+  }
+  loadRatio(loc: PanelDockLocation): number {
+    const ratioString = localStorage.getItem(localStorageDockRatioPrefix + loc);
+    if (ratioString) {
+      const ratio = JSON.parse(ratioString);
+      return ratio.ratio;
+    }
+    return .5;
+  }
 
   //<editor-fold desc="Dock resize">
   onDockResizeDown = (e: React.MouseEvent) => {
@@ -125,6 +144,7 @@ class PanelDock extends Component<Props, State> {
     window.removeEventListener("mousemove", this.onPanelRatioMove);
     window.removeEventListener("mouseup", this.onPanelRatioUp);
     document.body.style.removeProperty("cursor");
+    this.saveRatio(this.props.location);
   };
   //</editor-fold>
 

@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom";
-import {IPanelProps, localStoragePrefix} from "./definitions";
+import {IPanelProps, localStoragePanelPrefix} from "./definitions";
 
 interface Props {
   panelData: IPanelProps
@@ -30,13 +30,13 @@ export default class PanelWindowed extends React.Component<Props> {
   }
 
   saveLoc(name: string) {
-    localStorage.setItem(localStoragePrefix + name, JSON.stringify({
+    localStorage.setItem(localStoragePanelPrefix + name, JSON.stringify({
       width: this.window?.innerWidth, height: this.window?.innerHeight,
       top: this.window?.window.screenTop, left: this.window?.window.screenLeft
     }));
   }
   loadLoc(name: string): string {
-    const locString = localStorage.getItem(localStoragePrefix + name);
+    const locString = localStorage.getItem(localStoragePanelPrefix + name);
     if (locString) {
       const loc = JSON.parse(locString);
       return `top=${loc.top},left=${loc.left},width=${loc.width},height=${loc.height}`;
@@ -45,7 +45,10 @@ export default class PanelWindowed extends React.Component<Props> {
   }
 
   componentWillUnmount() {
+    const {panelData: {name}, minimise = () => { /* Empty */ }} = this.props;
+    this.saveLoc(name);
     this.window?.close();
+    window.removeEventListener("beforeunload", minimise);
   }
 
 
