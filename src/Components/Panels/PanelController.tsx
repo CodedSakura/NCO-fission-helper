@@ -123,16 +123,20 @@ export default class PanelController extends Component<PanelControllerProps, Sta
 
   getMenu = (loc: Location4) => {
     const {positions, open} = this.state;
-    const [a = [], b = []] = [0, 1].map(v => positions[loc][v]?.filter(v => v.state !== PanelState.Hidden));
+    const [a = [], b = []] = [0, 1].map(n => positions[loc][n]?.filter(panel => panel.state !== PanelState.Hidden));
     const {menu} = classDict;
+    // const dragOpts = (n: string) => ({
+    //   draggable: true,
+    //   onDragStart:() => console.log(`drag ${n}`), onDragOver: () => console.log(`over ${n}`),
+    //   onDragEnter:() => console.log(`drag enter ${n}`), onDragExit: () => console.log(`drag exit ${n}`),
+    //   onDragLeave:() => console.log(`drag leave ${n}`), onDragEnd:  () => console.log(`drag end ${n}`),
+    //   onDrag:     () => console.log(`on drag? ${n}`), onDrop:     () => console.log(`drop ${n}`),
+    // });
     return <div className={classMap(menu.c, ["left", "right"].includes(loc) && menu.vertical)}>
       {a.map(({name: n}) => <span key={n} onClick={() => this.setOpen(loc, 0, n)}
-                             // draggable onDragStart={() => console.log(`drag ${n}`)} onDragOver={() => console.log(`over ${n}`)} onDrop={() => console.log(`drop ${n}`)}
-                             //         onDragEnter={() => console.log(`drag enter ${n}`)} onDragExit={() => console.log(`drag exit ${n}`)} onDragLeave={() => console.log(`drag leave ${n}`)}
-                             //         onDragEnd={() => console.log(`drag end ${n}`)} // onDrag={() => console.log(`on drag? ${n}`)}
                              className={classMap(menu.item.c, open.has(n) && menu.item.active)}>{n}</span>)}
       <div className="panel__menu__separator"/>
-      {b.map(({name: n}) => <span key={n} onClick={() => this.setOpen(loc, 1, n)} //draggable onDragStart={() => console.log(`drag ${v.name}`)}
+      {b.map(({name: n}) => <span key={n} onClick={() => this.setOpen(loc, 1, n)}
                                   className={classMap(menu.item.c, open.has(n) && menu.item.active)}>{n}</span>)}
     </div>;
   }
@@ -148,9 +152,9 @@ export default class PanelController extends Component<PanelControllerProps, Sta
       }))(this.getOpenDocked(positions[loc][0]), this.getOpenDocked(positions[loc][1]));
     return <>
       {Object.values(positions).flat().flat().filter(v => open.has(v.name) && v.mode === PanelMode.Floating).map(v =>
-        <PanelFloating key={v.name} panelData={v} minimise={() => this.close(v.name)}/>)}
+        <PanelFloating key={v.name} panelData={v} minimise={() => this.close(v.name)} saveLoad={saveLoad}/>)}
       {Object.values(positions).flat().flat().filter(v => open.has(v.name) && v.mode === PanelMode.Windowed).map(v =>
-        <PanelWindowed key={v.name} panelData={v} minimise={() => this.close(v.name)}/>)}
+        <PanelWindowed key={v.name} panelData={v} minimise={() => this.close(v.name)} saveLoad={saveLoad}/>)}
       <div className="panel__controller">
         {prepend}
         {this.getMenu("top")}

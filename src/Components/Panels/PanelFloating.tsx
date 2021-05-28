@@ -3,7 +3,7 @@ import {IPanelProps} from "./definitions";
 
 interface Props {
   panelData: IPanelProps
-  saveState?: boolean
+  saveLoad?: boolean
   minimise?(): any
 }
 
