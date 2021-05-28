@@ -148,7 +148,7 @@ export default class PanelController extends Component<PanelControllerProps, Sta
     const shorthand = (loc: Location4): partialDockProps =>
       ((a, b): partialDockProps => ({
         panels: [a, b],
-        minimise: [a ? () => this.setOpen(loc, 0, a.name) : () => {}, b ? () => this.setOpen(loc, 0, b.name) : () => {}]
+        minimise: [a ? () => this.setOpen(loc, 0, a.name) : () => {/* empty */}, b ? () => this.setOpen(loc, 0, b.name) : () => {/* empty */}]
       }))(this.getOpenDocked(positions[loc][0]), this.getOpenDocked(positions[loc][1]));
     return <>
       {Object.values(positions).flat().flat().filter(v => open.has(v.name) && v.mode === PanelMode.Floating).map(v =>

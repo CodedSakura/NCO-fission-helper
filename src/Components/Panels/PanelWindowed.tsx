@@ -13,7 +13,7 @@ export default class PanelWindowed extends React.Component<Props> {
 
   constructor(props: Props) {
     super(props);
-    const {panelData: data, minimise = () => {}} = props;
+    const {panelData: data, minimise = () => { /* Empty */ }} = props;
     this.window = window.open("", data.name, "resizable,status," + this.loadLoc(data.name));
     if (this.window) {
       this.window.document.title = data.name;

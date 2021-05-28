@@ -128,15 +128,9 @@ class PanelDock extends Component<Props, State> {
   };
   //</editor-fold>
 
-
-  render() {
-    const {location, size, panels, minimise = [undefined, undefined]} = this.props;
-    const {ratio} = this.state;
-
-    const open = panels.map(v => !!v)
-    const openCount = open.filter(v => v).length;
-
-    const genPanel = (n: number, ratio: number) => <div className="panel" style={{flexGrow: ratio}}>
+  genPanel = (n: number, ratio: number) => {
+    const {panels, minimise = [undefined, undefined]} = this.props;
+    return <div className="panel" style={{flexGrow: ratio}}>
       <div className="panel__header">
         {panels[n]?.header || panels[n]?.name}
         <div className="panel__header__spacer"/>
@@ -150,18 +144,26 @@ class PanelDock extends Component<Props, State> {
       </div>
       {panels[n]?.data}
     </div>;
+  };
+
+  render() {
+    const {location, size, panels} = this.props;
+    const {ratio} = this.state;
+
+    const open = panels.map(v => !!v)
+    const openCount = open.filter(v => v).length;
 
     if (openCount === 0) return null;
     return <div className={classMap("panel__dock", dockMaps.classes[location])} style={{flexBasis: size}}>
       {dockMaps.resize[location][0] ? <div className="panel__dock__resize-handle" onMouseDown={this.onDockResizeDown}/> : null}
       <div className="panel__container" ref={r => this.dockRef = r}>
         {openCount > 1 ? <>
-          {genPanel(0, ratio)}
+          {this.genPanel(0, ratio)}
           <div className="panel__resize-handle" onMouseDown={this.onPanelRatioDown}/>
-          {genPanel(1, 1-ratio)}
+          {this.genPanel(1, 1-ratio)}
         </> : <>
-          {open[0] ? genPanel(0, 1) : null}
-          {open[1] ? genPanel(1, 1) : null}
+          {open[0] ? this.genPanel(0, 1) : null}
+          {open[1] ? this.genPanel(1, 1) : null}
         </>}
       </div>
       {dockMaps.resize[location][1] ? <div className="panel__dock__resize-handle" onMouseDown={this.onDockResizeDown}/> : null}

@@ -1,5 +1,5 @@
 import React from "react";
-import {IPanelProps} from "./definitions";
+import {IPanelProps, localStoragePrefix} from "./definitions";
 
 interface Props {
   panelData: IPanelProps
@@ -28,14 +28,49 @@ const cursorMap: {[x: string]: string} = {
 }
 
 export default class PanelFloating extends React.Component<Props, State> {
-  state: State = {
-    x: (lX += incr) % (window.innerWidth - defaultSize),
-    y: (lY += incr) % (window.innerHeight - defaultSize),
-    width: defaultSize,
-    height: defaultSize,
-  }
+  state: State;
   activeResize: string[]|undefined;
   mouseOffset = [0, 0];
+
+  constructor(props: Props) {
+    super(props);
+    this.state = {...this.loadLoc(props.panelData.name)};
+    window.addEventListener("beforeunload", () => this.saveLoc(props.panelData.name));
+  }
+
+
+  loadLoc(name: string): Pos {
+    const locString = localStorage.getItem(localStoragePrefix + name);
+    if (locString) {
+      const loc = JSON.parse(locString);
+      return {
+        x: loc.left,
+        y: loc.top,
+        width: loc.width,
+        height: loc.height,
+      }
+    } else {
+      lX += incr; lY += incr;
+      return {
+        x: lX % (window.innerWidth - defaultSize),
+        y: lY % (window.innerHeight - defaultSize),
+        width: defaultSize,
+        height: defaultSize,
+      }
+    }
+  }
+  saveLoc(name: string) {
+    localStorage.setItem(localStoragePrefix + name, JSON.stringify({
+        left: this.state.x,
+        top: this.state.y,
+        width: this.state.width,
+        height: this.state.height,
+    }));
+  }
+
+  componentWillUnmount() {
+    this.saveLoc(this.props.panelData.name);
+  }
 
 
   //<editor-fold desc="Resize">
