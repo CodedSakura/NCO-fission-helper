@@ -36,6 +36,7 @@ export default class PanelFloating extends React.Component<Props, State> {
     super(props);
     this.state = {...this.loadLoc(props.panelData.name)};
     window.addEventListener("beforeunload", () => this.saveLoc(props.panelData.name));
+    window.addEventListener("resize", this.updatePos)
   }
 
 
@@ -138,6 +139,12 @@ export default class PanelFloating extends React.Component<Props, State> {
     this.setState(({width, height}) => ({
       x: Math.max(0, Math.min(e.pageX - this.mouseOffset[0], window.innerWidth - width - 2)),
       y: Math.max(0, Math.min(e.pageY - this.mouseOffset[1], window.innerHeight - height - 2)),
+    }));
+  }
+  updatePos = () => {
+    this.setState(({x, y, width, height}) => ({
+      x: Math.max(0, Math.min(x, window.innerWidth - width - 2)),
+      y: Math.max(0, Math.min(y, window.innerHeight - height - 2)),
     }));
   }
   onMoveUp = (_: MouseEvent) => {
