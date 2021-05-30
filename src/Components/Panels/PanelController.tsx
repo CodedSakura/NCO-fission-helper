@@ -2,7 +2,7 @@ import React, {Component} from "react";
 import {
   classDict,
   IPanelProps,
-  IPanelPropsRequired,
+  IPanelPropsRequired, localStorageControllerString,
   Location4,
   location8List,
   location8To4Map,
@@ -75,7 +75,28 @@ export default class PanelController extends Component<PanelControllerProps, Sta
         ...p
       }));
     });
+    this.state = {...this.state, ...this.loadState()};
   }
+
+  loadState(): Partial<State> {
+    const stateString = localStorage.getItem(localStorageControllerString);
+    if (stateString) {
+      const state = JSON.parse(stateString);
+      console.log(state.open)
+      return {
+        sizes: state.sizes,
+        open: new Set(state.open)
+      };
+    }
+    return {};
+  };
+  saveState() {
+    localStorage.setItem(localStorageControllerString, JSON.stringify({
+      sizes: this.state.sizes,
+      // todo: positions
+      open: Array.from(this.state.open),
+    }));
+  };
 
 
   getOpenDocked = (list: IPanelProps[]): IPanelProps|undefined => {
@@ -96,7 +117,7 @@ export default class PanelController extends Component<PanelControllerProps, Sta
       sizes[loc] = Math.max(50, Math.min(size, window.innerWidth - 200
         - (!this.hasOpenDockedInLoc4(inverse) ? 0 : sizes[inverse])));
     }
-    this.setState({sizes: sizes});
+    this.setState({sizes: sizes}, this.saveState);
   }
 
   setOpen = (loc: Location4, side: 0|1, name: string) => {
@@ -118,7 +139,7 @@ export default class PanelController extends Component<PanelControllerProps, Sta
       const curr = s.open;
       s.open.delete(name);
       return {open: new Set<string>(curr)};
-    });
+    }, this.saveState);
   }
 
   getMenu = (loc: Location4) => {
