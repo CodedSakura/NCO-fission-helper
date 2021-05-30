@@ -233,8 +233,16 @@
       //max-height: calc(100vh - #{2 * ($size + 1)});
       //max-height: 100%;
       //object-fit: contain;
-      overflow: hidden;
+      overflow: auto;
       width: $rowHeight;
+
+
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none;  /* IE 10+ */
+      &::-webkit-scrollbar {
+        width: 0;
+        background: transparent; /* Chrome/Safari/Webkit */
+      }
 
       &:first-child {
         border-right: $border;
